@@ -13,6 +13,100 @@ export async function POST(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const contentType = request.headers.get("content-type") ?? "";
+    const supabase = createServiceClient();
+
+    // ── JSON body: memo or url ──────────────────────────────
+    if (contentType.includes("application/json")) {
+      const body = await request.json();
+
+      if (body.type === "memo") {
+        const title =
+          body.title?.trim() ||
+          `Memo ${new Date().toISOString().slice(0, 10)}`;
+        const content = body.content?.trim();
+        if (!content) {
+          return NextResponse.json(
+            { error: "Memo content is empty" },
+            { status: 400 },
+          );
+        }
+
+        const { data, error } = await supabase
+          .from("raw_sources")
+          .insert({
+            filename: title,
+            storage_path: `memo://${auth.userId}/${Date.now()}`,
+            mime_type: "text/plain",
+            content,
+            user_id: auth.userId,
+          })
+          .select("id")
+          .single();
+
+        if (error)
+          return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ success: true, sourceId: data.id });
+      }
+
+      if (body.type === "url") {
+        const url = body.url?.trim();
+        if (!url) {
+          return NextResponse.json(
+            { error: "No URL provided" },
+            { status: 400 },
+          );
+        }
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+
+        let content: string | null = null;
+        let pageTitle = url;
+        try {
+          const res = await fetch(url, {
+            signal: controller.signal,
+            headers: { "User-Agent": "MnemoBot/1.0" },
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const html = await res.text();
+          content = await extractHtmlText(html);
+
+          // Try to extract <title>
+          const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+          if (titleMatch) pageTitle = titleMatch[1].trim();
+        } catch (e) {
+          clearTimeout(timeout);
+          const msg =
+            e instanceof Error && e.name === "AbortError"
+              ? "Request timed out"
+              : "Failed to fetch URL";
+          return NextResponse.json({ error: msg }, { status: 400 });
+        } finally {
+          clearTimeout(timeout);
+        }
+
+        const { data, error } = await supabase
+          .from("raw_sources")
+          .insert({
+            filename: pageTitle,
+            storage_path: `url://${auth.userId}/${Date.now()}`,
+            mime_type: "text/html",
+            content,
+            user_id: auth.userId,
+          })
+          .select("id")
+          .single();
+
+        if (error)
+          return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ success: true, sourceId: data.id });
+      }
+
+      return NextResponse.json({ error: "Invalid type" }, { status: 400 });
+    }
+
+    // ── FormData: file upload (existing) ────────────────────
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
 
@@ -20,7 +114,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const supabase = createServiceClient();
     const sanitized = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const storagePath = `${auth.userId}/${Date.now()}-${sanitized}`;
 
@@ -29,7 +122,10 @@ export async function POST(request: NextRequest) {
       .upload(storagePath, file);
 
     if (uploadError) {
-      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+      return NextResponse.json(
+        { error: uploadError.message },
+        { status: 500 },
+      );
     }
 
     let content: string | null = null;
@@ -45,7 +141,11 @@ export async function POST(request: NextRequest) {
       } catch (e) {
         console.warn("PDF extraction failed:", e);
       }
-    } else if (HTML_TYPES.has(mime) || name.endsWith(".html") || name.endsWith(".htm")) {
+    } else if (
+      HTML_TYPES.has(mime) ||
+      name.endsWith(".html") ||
+      name.endsWith(".htm")
+    ) {
       try {
         const html = await file.text();
         content = await extractHtmlText(html);

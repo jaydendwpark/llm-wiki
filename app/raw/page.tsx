@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { DropZone } from "@/components/raw/DropZone";
+import { BuildWikiInput } from "@/components/raw/BuildWikiInput";
 import { CheckCircle, Clock, FileText } from "lucide-react";
 import { getT } from "@/lib/i18n/server";
 
@@ -21,7 +21,7 @@ export default async function RawPage() {
         <p className="text-wiki-muted text-sm">{t("import.desc")}</p>
       </div>
 
-      <DropZone />
+      <BuildWikiInput />
 
       {sources && sources.length > 0 && (
         <section className="mt-10">

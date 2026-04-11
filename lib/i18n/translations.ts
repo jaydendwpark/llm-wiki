@@ -104,6 +104,27 @@ const translations = {
   "import.done": { en: "Done", ko: "완료" },
   "import.error": { en: "Error", ko: "오류" },
   "import.uploadFolder": { en: "Upload folder", ko: "폴더 업로드" },
+  "import.tabFile": { en: "File", ko: "파일" },
+  "import.tabMemo": { en: "Memo", ko: "메모" },
+  "import.tabUrl": { en: "Link", ko: "링크" },
+  "import.memoTitle": {
+    en: "Title (optional)",
+    ko: "제목 (선택)",
+  },
+  "import.memoPlaceholder": {
+    en: "Write your thoughts, notes, ideas\u2026",
+    ko: "생각, 노트, 아이디어를 작성하세요\u2026",
+  },
+  "import.memoSubmit": { en: "Add to Wiki", ko: "위키에 추가" },
+  "import.urlPlaceholder": {
+    en: "https://\u2026",
+    ko: "https://\u2026",
+  },
+  "import.urlFetch": { en: "Fetch & Build", ko: "가져와서 만들기" },
+  "import.urlFetching": {
+    en: "Fetching page\u2026",
+    ko: "페이지 가져오는 중\u2026",
+  },
 
   // Lint
   "lint.title": { en: "Lint", ko: "Lint" },
