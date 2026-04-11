@@ -63,9 +63,9 @@ export function Sidebar() {
         <div className="p-5 border-b border-wiki-border">
           <div className="flex items-center gap-2.5">
             <ScrollText className="w-5 h-5 text-wiki-accent" />
-            <span className="font-semibold text-wiki-text tracking-tight">LLM Wiki</span>
+            <span className="font-semibold text-wiki-text tracking-tight">Mnemo</span>
           </div>
-          <p className="text-xs text-wiki-muted mt-1">Your knowledge base</p>
+          <p className="text-xs text-wiki-muted mt-1">mnemo.wiki</p>
         </div>
 
         {/* Search hint */}

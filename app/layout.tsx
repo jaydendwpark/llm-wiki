@@ -3,8 +3,8 @@ import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
 
 export const metadata: Metadata = {
-  title: "LLM Wiki",
-  description: "AI-maintained personal knowledge base inspired by Andrej Karpathy",
+  title: "Mnemo",
+  description: "AI-maintained personal knowledge base",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
