@@ -5,11 +5,10 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import type { GraphData, GraphNode } from "@/lib/wiki/graph";
 
-// Dynamically import to avoid SSR issues with canvas
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-full text-wiki-muted">
+    <div className="flex items-center justify-center h-full text-wiki-muted text-sm">
       Loading graph…
     </div>
   ),
@@ -29,29 +28,41 @@ function nodeColor(node: GraphNode): string {
 
 interface GraphViewProps {
   data: GraphData;
-  width?: number;
-  height?: number;
 }
 
-export function GraphView({ data, width = 800, height = 600 }: GraphViewProps) {
+export function GraphView({ data }: GraphViewProps) {
   const router = useRouter();
   const [hovered, setHovered] = useState<GraphNode | null>(null);
-  const graphRef = useRef<unknown>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+
+  // Measure container size client-side
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const measure = () =>
+      setDimensions({ width: el.clientWidth, height: el.clientHeight });
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const handleNodeClick = useCallback(
-    (node: GraphNode) => {
-      router.push(`/wiki/${node.id}`);
+    (node: object) => {
+      router.push(`/wiki/${(node as GraphNode).id}`);
     },
     [router]
   );
 
-  const handleNodeHover = useCallback((node: GraphNode | null) => {
-    setHovered(node);
+  const handleNodeHover = useCallback((node: object | null) => {
+    setHovered(node ? (node as GraphNode) : null);
   }, []);
 
   return (
-    <div className="relative bg-wiki-surface rounded-xl border border-wiki-border overflow-hidden">
-      {/* Tooltip */}
+    <div ref={containerRef} className="relative w-full h-full bg-wiki-surface rounded-xl border border-wiki-border overflow-hidden">
       {hovered && (
         <div className="absolute top-4 left-4 z-10 bg-wiki-bg border border-wiki-border rounded-lg p-3 max-w-xs shadow-xl pointer-events-none">
           <p className="text-sm font-semibold text-wiki-text">{hovered.name}</p>
@@ -62,7 +73,6 @@ export function GraphView({ data, width = 800, height = 600 }: GraphViewProps) {
         </div>
       )}
 
-      {/* Legend */}
       <div className="absolute top-4 right-4 z-10 bg-wiki-bg/80 border border-wiki-border rounded-lg p-3">
         <p className="text-xs text-wiki-muted mb-2 font-semibold uppercase tracking-wider">Legend</p>
         {Object.entries(TAG_COLORS).map(([tag, color]) => (
@@ -74,14 +84,13 @@ export function GraphView({ data, width = 800, height = 600 }: GraphViewProps) {
       </div>
 
       <ForceGraph2D
-        ref={graphRef as React.MutableRefObject<unknown>}
         graphData={data}
-        width={width}
-        height={height}
+        width={dimensions.width}
+        height={dimensions.height}
         backgroundColor="#0f1117"
         nodeLabel=""
-        nodeColor={nodeColor}
-        nodeVal={(node) => (node as GraphNode).val}
+        nodeColor={(n) => nodeColor(n as GraphNode)}
+        nodeVal={(n) => (n as GraphNode).val}
         nodeCanvasObject={(node, ctx, globalScale) => {
           const n = node as GraphNode & { x: number; y: number };
           const r = Math.sqrt(n.val) * 2 + 2;
@@ -98,8 +107,8 @@ export function GraphView({ data, width = 800, height = 600 }: GraphViewProps) {
         }}
         linkColor={() => "#2a2d3e"}
         linkWidth={1}
-        onNodeClick={handleNodeClick as (node: object) => void}
-        onNodeHover={handleNodeHover as (node: object | null) => void}
+        onNodeClick={handleNodeClick}
+        onNodeHover={handleNodeHover}
         enableNodeDrag
         enableZoomInteraction
         cooldownTicks={100}

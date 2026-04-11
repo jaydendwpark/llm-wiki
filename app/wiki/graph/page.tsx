@@ -18,7 +18,7 @@ export default async function GraphPage() {
 
   return (
     <div className="h-screen flex flex-col">
-      <header className="px-6 py-4 border-b border-wiki-border flex items-center gap-4">
+      <header className="px-6 py-4 border-b border-wiki-border flex items-center gap-4 shrink-0">
         <Link
           href="/wiki"
           className="flex items-center gap-1.5 text-wiki-muted hover:text-wiki-text text-sm transition-colors"
@@ -32,12 +32,8 @@ export default async function GraphPage() {
         </span>
       </header>
 
-      <div className="flex-1 p-4">
-        <GraphView
-          data={graphData}
-          width={typeof window !== "undefined" ? window.innerWidth - 280 : 800}
-          height={typeof window !== "undefined" ? window.innerHeight - 100 : 600}
-        />
+      <div className="flex-1 p-4 min-h-0">
+        <GraphView data={graphData} />
       </div>
     </div>
   );

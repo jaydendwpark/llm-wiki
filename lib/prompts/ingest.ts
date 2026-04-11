@@ -47,4 +47,4 @@ export const INGEST_USER_TEMPLATE = `## Current Wiki Index
 **Content:**
 {sourceContent}
 
-Process this source and return the JSON response described in your instructions.`;
+Process this source and return the JSON response described in your instructions, wrapped in a \`\`\`json code block.`;

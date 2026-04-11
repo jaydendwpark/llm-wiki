@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runLint } from "@/lib/agents/lint";
+import { validateApiRequest } from "@/lib/utils/api-auth";
 
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
+  const auth = await validateApiRequest(request, "lint");
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const result = await runLint();
     return NextResponse.json({ success: true, result });

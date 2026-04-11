@@ -1,5 +1,16 @@
 @import "tailwindcss";
-@import "@tailwindcss/typography";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-wiki-bg: #0f1117;
+  --color-wiki-surface: #1a1d2e;
+  --color-wiki-border: #2a2d3e;
+  --color-wiki-text: #e2e8f0;
+  --color-wiki-muted: #64748b;
+  --color-wiki-accent: #7c3aed;
+  --color-wiki-link: #818cf8;
+  --color-wiki-link-hover: #a5b4fc;
+}
 
 :root {
   --background: #0f1117;
@@ -22,6 +33,25 @@ body {
 .wiki-link:hover {
   border-bottom-color: #818cf8;
   color: #a5b4fc;
+}
+
+/* Prose dark mode overrides */
+.prose {
+  --tw-prose-body: #e2e8f0;
+  --tw-prose-headings: #f1f5f9;
+  --tw-prose-links: #818cf8;
+  --tw-prose-bold: #f1f5f9;
+  --tw-prose-counters: #64748b;
+  --tw-prose-bullets: #64748b;
+  --tw-prose-hr: #2a2d3e;
+  --tw-prose-quotes: #94a3b8;
+  --tw-prose-quote-borders: #7c3aed;
+  --tw-prose-captions: #64748b;
+  --tw-prose-code: #a78bfa;
+  --tw-prose-pre-code: #e2e8f0;
+  --tw-prose-pre-bg: #1e1b4b;
+  --tw-prose-th-borders: #2a2d3e;
+  --tw-prose-td-borders: #2a2d3e;
 }
 
 /* Custom scrollbar */

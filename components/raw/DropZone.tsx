@@ -1,21 +1,23 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 
 interface UploadState {
-  status: "idle" | "uploading" | "ingesting" | "done" | "error";
-  filename?: string;
+  id: number;
+  status: "uploading" | "ingesting" | "done" | "error";
+  filename: string;
   error?: string;
 }
 
 export function DropZone() {
   const [dragActive, setDragActive] = useState(false);
   const [uploads, setUploads] = useState<UploadState[]>([]);
+  const nextId = useRef(0);
 
   const processFile = useCallback(async (file: File) => {
-    const id = uploads.length;
-    setUploads((prev) => [...prev, { status: "uploading", filename: file.name }]);
+    const id = nextId.current++;
+    setUploads((prev) => [...prev, { id, status: "uploading", filename: file.name }]);
 
     try {
       // 1. Upload file
@@ -27,7 +29,7 @@ export function DropZone() {
       if (uploadError) throw new Error(uploadError);
 
       setUploads((prev) =>
-        prev.map((u, i) => (i === id ? { ...u, status: "ingesting" } : u))
+        prev.map((u) => (u.id === id ? { ...u, status: "ingesting" } : u))
       );
 
       // 2. Trigger ingest
@@ -41,15 +43,15 @@ export function DropZone() {
       if (ingestError) throw new Error(ingestError);
 
       setUploads((prev) =>
-        prev.map((u, i) => (i === id ? { ...u, status: "done" } : u))
+        prev.map((u) => (u.id === id ? { ...u, status: "done" } : u))
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed";
       setUploads((prev) =>
-        prev.map((u, i) => (i === id ? { ...u, status: "error", error: message } : u))
+        prev.map((u) => (u.id === id ? { ...u, status: "error", error: message } : u))
       );
     }
-  }, [uploads.length]);
+  }, []);
 
   const onDrop = useCallback(
     (e: React.DragEvent) => {
@@ -83,7 +85,7 @@ export function DropZone() {
       >
         <Upload className="w-10 h-10 mx-auto mb-4 text-wiki-muted" />
         <p className="text-wiki-text font-medium mb-1">Drop sources here or click to browse</p>
-        <p className="text-wiki-muted text-sm">Markdown, text, PDF — anything you want the wiki to learn from</p>
+        <p className="text-wiki-muted text-sm">Markdown, text, PDF, HTML — anything you want the wiki to learn from</p>
         <input
           id="file-input"
           type="file"
@@ -96,9 +98,9 @@ export function DropZone() {
 
       {uploads.length > 0 && (
         <div className="space-y-2">
-          {uploads.map((u, i) => (
+          {uploads.map((u) => (
             <div
-              key={i}
+              key={u.id}
               className="flex items-center gap-3 bg-wiki-surface border border-wiki-border rounded-lg px-4 py-3"
             >
               <FileText className="w-4 h-4 text-wiki-muted shrink-0" />

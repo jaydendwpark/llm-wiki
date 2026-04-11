@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["@langchain/core", "langchain"],
-  },
+  serverExternalPackages: ["@langchain/core", "langchain", "pdf-parse"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**" },

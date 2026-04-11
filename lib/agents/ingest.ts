@@ -2,7 +2,7 @@
  * Ingest pipeline — LangGraph-based agent for processing raw sources.
  *
  * Flow:
- *   load_source → read_index → llm_analyze → persist_pages → update_index → log
+ *   load_source → read_index → llm_analyze → persist_pages → append_log
  */
 
 import { StateGraph, Annotation, END } from "@langchain/langgraph";
@@ -10,8 +10,11 @@ import { ChatAnthropic } from "@langchain/anthropic";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { createServiceClient } from "@/lib/supabase/server";
 import { INGEST_SYSTEM_PROMPT, INGEST_USER_TEMPLATE } from "@/lib/prompts/ingest";
-import { extractOutboundLinks, toSlug } from "@/lib/wiki/parser";
-import { buildLogEntry } from "@/lib/wiki/index-manager";
+import { extractOutboundLinks } from "@/lib/wiki/parser";
+import { parseLLMJson, IngestResultSchema } from "@/lib/utils/parse-llm-json";
+import { z } from "zod";
+
+type IngestResult = z.infer<typeof IngestResultSchema>;
 
 const IngestState = Annotation.Root({
   sourceId: Annotation<string>(),
@@ -21,21 +24,6 @@ const IngestState = Annotation.Root({
   llmResult: Annotation<IngestResult | null>(),
   error: Annotation<string | null>(),
 });
-
-interface WikiPagePayload {
-  slug: string;
-  title: string;
-  content: string;
-  summary: string;
-  tags: string[];
-  action: "create" | "update";
-}
-
-interface IngestResult {
-  summaryPage: WikiPagePayload;
-  updatedPages: WikiPagePayload[];
-  logEntry: string;
-}
 
 const llm = new ChatAnthropic({
   model: "claude-sonnet-4-6",
@@ -55,7 +43,6 @@ async function loadSource(state: typeof IngestState.State) {
 
   if (error || !data) return { error: `Source not found: ${state.sourceId}` };
 
-  // If stored in Supabase Storage, download it
   let content = data.content ?? "";
   if (!content && data.storage_path) {
     const { data: file } = await supabase.storage
@@ -101,22 +88,18 @@ async function llmAnalyze(state: typeof IngestState.State) {
   const userMessage = INGEST_USER_TEMPLATE
     .replace("{indexContent}", state.indexContent)
     .replace("{filename}", state.filename)
-    .replace("{sourceContent}", state.sourceContent.slice(0, 60_000)); // token guard
+    .replace("{sourceContent}", state.sourceContent.slice(0, 60_000));
 
   const response = await llm.invoke([
     new SystemMessage(INGEST_SYSTEM_PROMPT),
     new HumanMessage(userMessage),
   ]);
 
-  const text = response.content as string;
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) return { error: "LLM did not return valid JSON" };
-
   try {
-    const result: IngestResult = JSON.parse(jsonMatch[0]);
+    const result = parseLLMJson(response.content as string, IngestResultSchema);
     return { llmResult: result };
-  } catch {
-    return { error: "Failed to parse LLM JSON response" };
+  } catch (err) {
+    return { error: `LLM parse error: ${err instanceof Error ? err.message : err}` };
   }
 }
 
@@ -129,22 +112,13 @@ async function persistPages(state: typeof IngestState.State) {
   for (const page of allPages) {
     const outboundLinks = extractOutboundLinks(page.content);
 
-    const { error } = await supabase
+    await supabase
       .from("wiki_pages")
       .upsert(
-        {
-          slug: page.slug,
-          title: page.title,
-          content: page.content,
-          summary: page.summary,
-          tags: page.tags,
-        },
+        { slug: page.slug, title: page.title, content: page.content, summary: page.summary, tags: page.tags },
         { onConflict: "slug" }
       );
 
-    if (error) console.error(`Failed to upsert page ${page.slug}:`, error);
-
-    // Refresh wiki_links for this page
     await supabase.from("wiki_links").delete().eq("from_slug", page.slug);
     if (outboundLinks.length > 0) {
       await supabase.from("wiki_links").insert(
@@ -153,7 +127,6 @@ async function persistPages(state: typeof IngestState.State) {
     }
   }
 
-  // Mark source as ingested
   await supabase
     .from("raw_sources")
     .update({ ingested: true, ingested_at: new Date().toISOString() })
@@ -197,7 +170,14 @@ const graph = new StateGraph(IngestState)
 export const ingestGraph = graph.compile();
 
 export async function runIngest(sourceId: string) {
-  const result = await ingestGraph.invoke({ sourceId, filename: "", sourceContent: "", indexContent: "", llmResult: null, error: null });
+  const result = await ingestGraph.invoke({
+    sourceId,
+    filename: "",
+    sourceContent: "",
+    indexContent: "",
+    llmResult: null,
+    error: null,
+  });
   if (result.error) throw new Error(result.error);
-  return result.llmResult;
+  return result.llmResult as IngestResult;
 }

@@ -2,7 +2,7 @@
  * Lint pipeline — periodic wiki health check.
  *
  * Flow:
- *   load_all_pages → analyze_graph → llm_lint → apply_fixes → log
+ *   load_all_pages → analyze_graph → llm_lint → apply_fixes → append_log
  */
 
 import { StateGraph, Annotation, END } from "@langchain/langgraph";
@@ -12,16 +12,11 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { LINT_SYSTEM_PROMPT, LINT_USER_TEMPLATE } from "@/lib/prompts/lint";
 import { buildGraphData, findOrphans } from "@/lib/wiki/graph";
 import { extractOutboundLinks } from "@/lib/wiki/parser";
+import { parseLLMJson, LintResultSchema } from "@/lib/utils/parse-llm-json";
+import { z } from "zod";
 
-const LintState = Annotation.Root({
-  allPages: Annotation<PageData[]>(),
-  allLinks: Annotation<LinkData[]>(),
-  indexContent: Annotation<string>(),
-  orphanSlugs: Annotation<string[]>(),
-  brokenLinks: Annotation<string[]>(),
-  llmResult: Annotation<LintResult | null>(),
-  error: Annotation<string | null>(),
-});
+export type LintResult = z.infer<typeof LintResultSchema>;
+export type LintIssue = LintResult["issues"][number];
 
 interface PageData {
   slug: string;
@@ -36,25 +31,15 @@ interface LinkData {
   to_slug: string;
 }
 
-export interface LintIssue {
-  type: "orphan" | "broken-link" | "contradiction" | "stale" | "missing-page" | "thin" | "missing-crossref";
-  severity: "error" | "warning" | "info";
-  slug: string;
-  description: string;
-  suggestion: string;
-}
-
-interface LintResult {
-  issues: LintIssue[];
-  fixes: Array<{
-    slug: string;
-    title: string;
-    action: "create" | "update";
-    content: string;
-    summary: string;
-  }>;
-  summary: string;
-}
+const LintState = Annotation.Root({
+  allPages: Annotation<PageData[]>(),
+  allLinks: Annotation<LinkData[]>(),
+  indexContent: Annotation<string>(),
+  orphanSlugs: Annotation<string[]>(),
+  brokenLinks: Annotation<string[]>(),
+  llmResult: Annotation<LintResult | null>(),
+  error: Annotation<string | null>(),
+});
 
 const llm = new ChatAnthropic({
   model: "claude-sonnet-4-6",
@@ -88,7 +73,6 @@ async function analyzeGraph(state: typeof LintState.State) {
   const graphData = buildGraphData(state.allPages, state.allLinks);
   const orphanSlugs = findOrphans(graphData);
 
-  // Find broken links: to_slug not in any page slug
   const pageSlugs = new Set(state.allPages.map((p) => p.slug));
   const broken = [...new Set(
     state.allLinks
@@ -100,9 +84,8 @@ async function analyzeGraph(state: typeof LintState.State) {
 }
 
 async function llmLint(state: typeof LintState.State) {
-  // Only send content summaries to avoid huge context
   const allPagesContent = state.allPages
-    .slice(0, 30) // limit for token budget
+    .slice(0, 30)
     .map((p) => `### ${p.title} (${p.slug})\n${p.content.slice(0, 800)}`)
     .join("\n\n---\n\n");
 
@@ -117,14 +100,11 @@ async function llmLint(state: typeof LintState.State) {
     new HumanMessage(userMessage),
   ]);
 
-  const text = response.content as string;
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) return { error: "LLM did not return valid JSON" };
-
   try {
-    return { llmResult: JSON.parse(jsonMatch[0]) as LintResult };
-  } catch {
-    return { error: "Failed to parse LLM JSON" };
+    const result = parseLLMJson(response.content as string, LintResultSchema);
+    return { llmResult: result };
+  } catch (err) {
+    return { error: `LLM parse error: ${err instanceof Error ? err.message : err}` };
   }
 }
 

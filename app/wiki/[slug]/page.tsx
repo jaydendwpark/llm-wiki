@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { WikiRenderer } from "@/components/wiki/WikiRenderer";
-import { ArrowLeft, Clock, Tag, Link2 } from "lucide-react";
+import { ArrowLeft, Clock, Tag, Link2, Pencil } from "lucide-react";
 
 export const revalidate = 60;
 
@@ -37,7 +37,16 @@ export default async function WikiPageRoute({ params }: Props) {
 
       {/* Header */}
       <header className="mb-8">
-        <h1 className="text-4xl font-bold text-wiki-text mb-3">{page.title}</h1>
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <h1 className="text-4xl font-bold text-wiki-text">{page.title}</h1>
+          <Link
+            href={`/wiki/${slug}/edit`}
+            className="shrink-0 flex items-center gap-1.5 text-wiki-muted hover:text-wiki-text text-sm border border-wiki-border hover:border-wiki-accent/50 rounded-lg px-3 py-1.5 transition-colors mt-1"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            Edit
+          </Link>
+        </div>
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-wiki-muted">
           <span className="flex items-center gap-1.5">

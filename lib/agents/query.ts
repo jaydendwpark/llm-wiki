@@ -2,7 +2,7 @@
  * Query pipeline — LangGraph agent for answering questions against the wiki.
  *
  * Flow:
- *   read_index → find_relevant_pages → load_pages → llm_answer → file_back → log
+ *   read_index → find_relevant_pages → load_pages → llm_answer → file_back → append_log
  */
 
 import { StateGraph, Annotation, END } from "@langchain/langgraph";
@@ -11,6 +11,10 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { createServiceClient } from "@/lib/supabase/server";
 import { QUERY_SYSTEM_PROMPT, QUERY_USER_TEMPLATE } from "@/lib/prompts/query";
 import { extractOutboundLinks } from "@/lib/wiki/parser";
+import { parseLLMJson, QueryResultSchema } from "@/lib/utils/parse-llm-json";
+import { z } from "zod";
+
+type QueryResult = z.infer<typeof QueryResultSchema>;
 
 const QueryState = Annotation.Root({
   question: Annotation<string>(),
@@ -20,19 +24,6 @@ const QueryState = Annotation.Root({
   llmResult: Annotation<QueryResult | null>(),
   error: Annotation<string | null>(),
 });
-
-interface QueryResult {
-  answer: string;
-  citedPages: string[];
-  shouldFile: boolean;
-  filedPage: {
-    slug: string;
-    title: string;
-    content: string;
-    summary: string;
-    tags: string[];
-  } | null;
-}
 
 const llm = new ChatAnthropic({
   model: "claude-sonnet-4-6",
@@ -60,14 +51,13 @@ async function readIndex(state: typeof QueryState.State) {
 }
 
 async function findRelevantPages(state: typeof QueryState.State) {
-  // Use Supabase full-text search to find relevant pages
   const supabase = createServiceClient();
-  const words = state.question.split(/\s+/).slice(0, 10).join(" & ");
 
+  // Use the fts generated column for full-text search
   const { data } = await supabase
     .from("wiki_pages")
     .select("slug")
-    .textSearch("content", words, { type: "websearch" })
+    .textSearch("fts", state.question, { type: "websearch" })
     .limit(8);
 
   const slugs = data?.map((p) => p.slug) ?? [];
@@ -87,9 +77,7 @@ async function loadPages(state: typeof QueryState.State) {
 
   if (!data?.length) return { pagesContent: "*(no pages loaded)*" };
 
-  const sections = data.map(
-    (p) => `## ${p.title} (${p.slug})\n\n${p.content}`
-  );
+  const sections = data.map((p) => `## ${p.title} (${p.slug})\n\n${p.content}`);
   return { pagesContent: sections.join("\n\n---\n\n") };
 }
 
@@ -104,14 +92,11 @@ async function llmAnswer(state: typeof QueryState.State) {
     new HumanMessage(userMessage),
   ]);
 
-  const text = response.content as string;
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) return { error: "LLM did not return valid JSON" };
-
   try {
-    return { llmResult: JSON.parse(jsonMatch[0]) as QueryResult };
-  } catch {
-    return { error: "Failed to parse LLM JSON" };
+    const result = parseLLMJson(response.content as string, QueryResultSchema);
+    return { llmResult: result };
+  } catch (err) {
+    return { error: `LLM parse error: ${err instanceof Error ? err.message : err}` };
   }
 }
 

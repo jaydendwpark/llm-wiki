@@ -44,4 +44,4 @@ export const LINT_USER_TEMPLATE = `## Wiki Index
 ## Broken Links (linked but no page exists)
 {brokenLinks}
 
-Run a full health check and return JSON as described.`;
+Run a full health check and return JSON as described, wrapped in a \`\`\`json code block.`;

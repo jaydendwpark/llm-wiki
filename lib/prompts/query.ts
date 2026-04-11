@@ -42,4 +42,4 @@ export const QUERY_USER_TEMPLATE = `## Wiki Index
 ## User Question
 {question}
 
-Answer the question and return JSON as described.`;
+Answer the question and return JSON as described, wrapped in a \`\`\`json code block.`;
