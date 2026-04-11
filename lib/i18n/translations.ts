@@ -125,6 +125,7 @@ const translations = {
     en: "Fetching page\u2026",
     ko: "페이지 가져오는 중\u2026",
   },
+  "import.queued": { en: "Queued", ko: "대기 중" },
 
   // Lint
   "lint.title": { en: "Lint", ko: "Lint" },

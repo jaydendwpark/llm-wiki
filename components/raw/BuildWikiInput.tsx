@@ -18,7 +18,7 @@ type InputMode = "file" | "memo" | "url";
 
 interface UploadState {
   id: number;
-  status: "uploading" | "ingesting" | "done" | "error";
+  status: "uploading" | "queued" | "ingesting" | "done" | "error";
   filename: string;
   error?: string;
 }
@@ -69,7 +69,42 @@ export function BuildWikiInput() {
   const [urlValue, setUrlValue] = useState("");
   const [urlSending, setUrlSending] = useState(false);
 
-  // ── Shared upload pipeline ──
+  // ── Sequential ingest queue ──
+  const ingestQueue = useRef<{ sourceId: string; id: number }[]>([]);
+  const ingesting = useRef(false);
+
+  const drainIngestQueue = useCallback(async () => {
+    if (ingesting.current) return;
+    ingesting.current = true;
+
+    while (ingestQueue.current.length > 0) {
+      const { sourceId, id } = ingestQueue.current.shift()!;
+      setUploads((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, status: "ingesting" } : u)),
+      );
+      try {
+        const res = await fetch("/api/ingest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sourceId }),
+        });
+        const { error } = await res.json();
+        if (error) throw new Error(error);
+        setUploads((prev) =>
+          prev.map((u) => (u.id === id ? { ...u, status: "done" } : u)),
+        );
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed";
+        setUploads((prev) =>
+          prev.map((u) => (u.id === id ? { ...u, status: "error", error: message } : u)),
+        );
+      }
+    }
+
+    ingesting.current = false;
+  }, []);
+
+  // ── Shared upload pipeline (upload parallel, ingest sequential) ──
   const processUpload = useCallback(
     async (name: string, uploadFn: () => Promise<string>) => {
       const id = nextId.current++;
@@ -81,23 +116,12 @@ export function BuildWikiInput() {
       try {
         const sourceId = await uploadFn();
 
+        // Queue ingest instead of calling immediately
         setUploads((prev) =>
-          prev.map((u) =>
-            u.id === id ? { ...u, status: "ingesting" } : u,
-          ),
+          prev.map((u) => (u.id === id ? { ...u, status: "queued" } : u)),
         );
-
-        const ingestRes = await fetch("/api/ingest", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sourceId }),
-        });
-        const { error } = await ingestRes.json();
-        if (error) throw new Error(error);
-
-        setUploads((prev) =>
-          prev.map((u) => (u.id === id ? { ...u, status: "done" } : u)),
-        );
+        ingestQueue.current.push({ sourceId, id });
+        drainIngestQueue();
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed";
         setUploads((prev) =>
@@ -107,7 +131,7 @@ export function BuildWikiInput() {
         );
       }
     },
-    [],
+    [drainIngestQueue],
   );
 
   // ── File handlers ──
@@ -367,6 +391,11 @@ export function BuildWikiInput() {
                 <span className="flex items-center gap-1.5 text-xs text-wiki-muted">
                   <Loader2 className="w-3 h-3 animate-spin" />{" "}
                   {t("import.uploading")}
+                </span>
+              )}
+              {u.status === "queued" && (
+                <span className="flex items-center gap-1.5 text-xs text-wiki-muted">
+                  {t("import.queued")}
                 </span>
               )}
               {u.status === "ingesting" && (
