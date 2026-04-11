@@ -3,16 +3,18 @@
  *
  * Flow:
  *   load_all_pages → analyze_graph → llm_lint → apply_fixes → append_log
+ *
+ * Uses Gemini 2.5 Flash.
  */
 
 import { StateGraph, Annotation, END } from "@langchain/langgraph";
-import { ChatAnthropic } from "@langchain/anthropic";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { createServiceClient } from "@/lib/supabase/server";
 import { LINT_SYSTEM_PROMPT, LINT_USER_TEMPLATE } from "@/lib/prompts/lint";
 import { buildGraphData, findOrphans } from "@/lib/wiki/graph";
 import { extractOutboundLinks } from "@/lib/wiki/parser";
 import { parseLLMJson, LintResultSchema } from "@/lib/utils/parse-llm-json";
+import { callLLM, LLMUsage } from "@/lib/agents/llm";
+import { recordUsage } from "@/lib/usage/tracker";
 import { z } from "zod";
 
 export type LintResult = z.infer<typeof LintResultSchema>;
@@ -32,19 +34,15 @@ interface LinkData {
 }
 
 const LintState = Annotation.Root({
-  allPages: Annotation<PageData[]>(),
-  allLinks: Annotation<LinkData[]>(),
+  allPages:     Annotation<PageData[]>(),
+  allLinks:     Annotation<LinkData[]>(),
+  userId:       Annotation<string>(),
   indexContent: Annotation<string>(),
-  orphanSlugs: Annotation<string[]>(),
-  brokenLinks: Annotation<string[]>(),
-  llmResult: Annotation<LintResult | null>(),
-  error: Annotation<string | null>(),
-});
-
-const llm = new ChatAnthropic({
-  model: "claude-sonnet-4-6",
-  maxTokens: 8192,
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  orphanSlugs:  Annotation<string[]>(),
+  brokenLinks:  Annotation<string[]>(),
+  llmResult:    Annotation<LintResult | null>(),
+  llmUsage:     Annotation<LLMUsage | null>(),
+  error:        Annotation<string | null>(),
 });
 
 // ─── Nodes ───────────────────────────────────────────────────────────────────
@@ -95,14 +93,14 @@ async function llmLint(state: typeof LintState.State) {
     .replace("{orphanSlugs}", state.orphanSlugs.join(", ") || "none")
     .replace("{brokenLinks}", state.brokenLinks.join(", ") || "none");
 
-  const response = await llm.invoke([
-    new SystemMessage(LINT_SYSTEM_PROMPT),
-    new HumanMessage(userMessage),
-  ]);
+  const { text, usage } = await callLLM({
+    system: LINT_SYSTEM_PROMPT,
+    user: userMessage,
+  });
 
   try {
-    const result = parseLLMJson(response.content as string, LintResultSchema);
-    return { llmResult: result };
+    const result = parseLLMJson(text, LintResultSchema);
+    return { llmResult: result, llmUsage: usage };
   } catch (err) {
     return { error: `LLM parse error: ${err instanceof Error ? err.message : err}` };
   }
@@ -147,6 +145,10 @@ async function appendLog(state: typeof LintState.State) {
     },
   });
 
+  if (state.llmUsage) {
+    recordUsage(state.userId, "lint", state.llmUsage).catch(console.error);
+  }
+
   return {};
 }
 
@@ -167,15 +169,11 @@ const graph = new StateGraph(LintState)
 
 export const lintGraph = graph.compile();
 
-export async function runLint() {
+export async function runLint(userId: string) {
   const result = await lintGraph.invoke({
-    allPages: [],
-    allLinks: [],
-    indexContent: "",
-    orphanSlugs: [],
-    brokenLinks: [],
-    llmResult: null,
-    error: null,
+    allPages: [], allLinks: [], userId,
+    indexContent: "", orphanSlugs: [], brokenLinks: [],
+    llmResult: null, llmUsage: null, error: null,
   });
   if (result.error) throw new Error(result.error);
   return result.llmResult as LintResult;

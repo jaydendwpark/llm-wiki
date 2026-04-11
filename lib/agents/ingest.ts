@@ -3,32 +3,30 @@
  *
  * Flow:
  *   load_source → read_index → llm_analyze → persist_pages → append_log
+ *
+ * Uses Gemini 2.5 Flash (1M context window — handles large source documents).
  */
 
 import { StateGraph, Annotation, END } from "@langchain/langgraph";
-import { ChatAnthropic } from "@langchain/anthropic";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { createServiceClient } from "@/lib/supabase/server";
 import { INGEST_SYSTEM_PROMPT, INGEST_USER_TEMPLATE } from "@/lib/prompts/ingest";
 import { extractOutboundLinks } from "@/lib/wiki/parser";
 import { parseLLMJson, IngestResultSchema } from "@/lib/utils/parse-llm-json";
+import { callLLM, LLMUsage } from "@/lib/agents/llm";
+import { recordUsage } from "@/lib/usage/tracker";
 import { z } from "zod";
 
 type IngestResult = z.infer<typeof IngestResultSchema>;
 
 const IngestState = Annotation.Root({
-  sourceId: Annotation<string>(),
-  filename: Annotation<string>(),
+  sourceId:      Annotation<string>(),
+  userId:        Annotation<string>(),
+  filename:      Annotation<string>(),
   sourceContent: Annotation<string>(),
-  indexContent: Annotation<string>(),
-  llmResult: Annotation<IngestResult | null>(),
-  error: Annotation<string | null>(),
-});
-
-const llm = new ChatAnthropic({
-  model: "claude-sonnet-4-6",
-  maxTokens: 8192,
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  indexContent:  Annotation<string>(),
+  llmResult:     Annotation<IngestResult | null>(),
+  llmUsage:      Annotation<LLMUsage | null>(),
+  error:         Annotation<string | null>(),
 });
 
 // ─── Nodes ───────────────────────────────────────────────────────────────────
@@ -88,16 +86,16 @@ async function llmAnalyze(state: typeof IngestState.State) {
   const userMessage = INGEST_USER_TEMPLATE
     .replace("{indexContent}", state.indexContent)
     .replace("{filename}", state.filename)
-    .replace("{sourceContent}", state.sourceContent.slice(0, 60_000));
+    .replace("{sourceContent}", state.sourceContent.slice(0, 800_000)); // ~200K tokens (800K chars)
 
-  const response = await llm.invoke([
-    new SystemMessage(INGEST_SYSTEM_PROMPT),
-    new HumanMessage(userMessage),
-  ]);
+  const { text, usage } = await callLLM({
+    system: INGEST_SYSTEM_PROMPT,
+    user: userMessage,
+  });
 
   try {
-    const result = parseLLMJson(response.content as string, IngestResultSchema);
-    return { llmResult: result };
+    const result = parseLLMJson(text, IngestResultSchema);
+    return { llmResult: result, llmUsage: usage };
   } catch (err) {
     return { error: `LLM parse error: ${err instanceof Error ? err.message : err}` };
   }
@@ -115,7 +113,11 @@ async function persistPages(state: typeof IngestState.State) {
     await supabase
       .from("wiki_pages")
       .upsert(
-        { slug: page.slug, title: page.title, content: page.content, summary: page.summary, tags: page.tags },
+        {
+          slug: page.slug, title: page.title, content: page.content,
+          summary: page.summary, tags: page.tags,
+          user_id: state.userId,
+        },
         { onConflict: "slug" }
       );
 
@@ -149,6 +151,11 @@ async function appendLog(state: typeof IngestState.State) {
     },
   });
 
+  // Fire-and-forget: usage tracking must not fail the main operation
+  if (state.llmUsage) {
+    recordUsage(state.userId, "ingest", state.llmUsage).catch(console.error);
+  }
+
   return {};
 }
 
@@ -169,14 +176,11 @@ const graph = new StateGraph(IngestState)
 
 export const ingestGraph = graph.compile();
 
-export async function runIngest(sourceId: string) {
+export async function runIngest(sourceId: string, userId: string) {
   const result = await ingestGraph.invoke({
-    sourceId,
-    filename: "",
-    sourceContent: "",
-    indexContent: "",
-    llmResult: null,
-    error: null,
+    sourceId, userId,
+    filename: "", sourceContent: "", indexContent: "",
+    llmResult: null, llmUsage: null, error: null,
   });
   if (result.error) throw new Error(result.error);
   return result.llmResult as IngestResult;

@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { sourceId } = schema.parse(body);
-    const result = await runIngest(sourceId);
+    const result = await runIngest(sourceId, auth.userId);
     return NextResponse.json({ success: true, result });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { question } = schema.parse(body);
-    const result = await runQuery(question);
+    const result = await runQuery(question, auth.userId);
     return NextResponse.json({ success: true, result });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

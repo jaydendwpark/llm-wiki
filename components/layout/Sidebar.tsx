@@ -2,9 +2,17 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { BookOpen, Upload, Search, Network, Activity, ScrollText, Wrench, Download, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SearchDialog } from "./SearchDialog";
+
+interface UsageSummary {
+  month: string;
+  plan: string;
+  limitUsd: number;
+  spentUsd: number;
+}
 
 const NAV = [
   { href: "/wiki",        icon: BookOpen, label: "Wiki" },
@@ -18,6 +26,14 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const [usage, setUsage] = useState<UsageSummary | null>(null);
+
+  useEffect(() => {
+    fetch("/api/usage")
+      .then((r) => r.json())
+      .then((d) => { if (d.limitUsd) setUsage(d); })
+      .catch(() => {});
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -84,6 +100,31 @@ export function Sidebar() {
             );
           })}
         </nav>
+
+        {/* Monthly budget widget */}
+        {usage && (
+          <div className="mx-3 mb-2 px-3 py-2.5 bg-wiki-bg border border-wiki-border rounded-lg">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs text-wiki-muted">AI Budget</span>
+              <span className="text-xs text-wiki-muted">{usage.month}</span>
+            </div>
+            <div className="h-1.5 bg-wiki-border rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${
+                  usage.spentUsd / usage.limitUsd > 0.9
+                    ? "bg-red-500"
+                    : usage.spentUsd / usage.limitUsd > 0.7
+                    ? "bg-yellow-500"
+                    : "bg-wiki-accent"
+                }`}
+                style={{ width: `${Math.min(100, (usage.spentUsd / usage.limitUsd) * 100).toFixed(1)}%` }}
+              />
+            </div>
+            <p className="text-xs text-wiki-muted mt-1">
+              ${usage.spentUsd.toFixed(3)} / ${usage.limitUsd.toFixed(2)}
+            </p>
+          </div>
+        )}
 
         <div className="p-3 border-t border-wiki-border space-y-1">
           <button

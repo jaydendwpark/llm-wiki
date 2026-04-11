@@ -3,32 +3,30 @@
  *
  * Flow:
  *   read_index → find_relevant_pages → load_pages → llm_answer → file_back → append_log
+ *
+ * Uses Gemini 2.5 Flash.
  */
 
 import { StateGraph, Annotation, END } from "@langchain/langgraph";
-import { ChatAnthropic } from "@langchain/anthropic";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { createServiceClient } from "@/lib/supabase/server";
 import { QUERY_SYSTEM_PROMPT, QUERY_USER_TEMPLATE } from "@/lib/prompts/query";
 import { extractOutboundLinks } from "@/lib/wiki/parser";
 import { parseLLMJson, QueryResultSchema } from "@/lib/utils/parse-llm-json";
+import { callLLM, LLMUsage } from "@/lib/agents/llm";
+import { recordUsage } from "@/lib/usage/tracker";
 import { z } from "zod";
 
 type QueryResult = z.infer<typeof QueryResultSchema>;
 
 const QueryState = Annotation.Root({
-  question: Annotation<string>(),
-  indexContent: Annotation<string>(),
+  question:      Annotation<string>(),
+  userId:        Annotation<string>(),
+  indexContent:  Annotation<string>(),
   relevantSlugs: Annotation<string[]>(),
-  pagesContent: Annotation<string>(),
-  llmResult: Annotation<QueryResult | null>(),
-  error: Annotation<string | null>(),
-});
-
-const llm = new ChatAnthropic({
-  model: "claude-sonnet-4-6",
-  maxTokens: 8192,
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  pagesContent:  Annotation<string>(),
+  llmResult:     Annotation<QueryResult | null>(),
+  llmUsage:      Annotation<LLMUsage | null>(),
+  error:         Annotation<string | null>(),
 });
 
 // ─── Nodes ───────────────────────────────────────────────────────────────────
@@ -53,15 +51,13 @@ async function readIndex(state: typeof QueryState.State) {
 async function findRelevantPages(state: typeof QueryState.State) {
   const supabase = createServiceClient();
 
-  // Use the fts generated column for full-text search
   const { data } = await supabase
     .from("wiki_pages")
     .select("slug")
     .textSearch("fts", state.question, { type: "websearch" })
     .limit(8);
 
-  const slugs = data?.map((p) => p.slug) ?? [];
-  return { relevantSlugs: slugs };
+  return { relevantSlugs: data?.map((p) => p.slug) ?? [] };
 }
 
 async function loadPages(state: typeof QueryState.State) {
@@ -87,14 +83,14 @@ async function llmAnswer(state: typeof QueryState.State) {
     .replace("{pagesContent}", state.pagesContent)
     .replace("{question}", state.question);
 
-  const response = await llm.invoke([
-    new SystemMessage(QUERY_SYSTEM_PROMPT),
-    new HumanMessage(userMessage),
-  ]);
+  const { text, usage } = await callLLM({
+    system: QUERY_SYSTEM_PROMPT,
+    user: userMessage,
+  });
 
   try {
-    const result = parseLLMJson(response.content as string, QueryResultSchema);
-    return { llmResult: result };
+    const result = parseLLMJson(text, QueryResultSchema);
+    return { llmResult: result, llmUsage: usage };
   } catch (err) {
     return { error: `LLM parse error: ${err instanceof Error ? err.message : err}` };
   }
@@ -108,7 +104,11 @@ async function fileBack(state: typeof QueryState.State) {
   const outbound = extractOutboundLinks(page.content);
 
   await supabase.from("wiki_pages").upsert(
-    { slug: page.slug, title: page.title, content: page.content, summary: page.summary, tags: page.tags },
+    {
+      slug: page.slug, title: page.title, content: page.content,
+      summary: page.summary, tags: page.tags,
+      user_id: state.userId,
+    },
     { onConflict: "slug" }
   );
 
@@ -136,6 +136,10 @@ async function appendLog(state: typeof QueryState.State) {
     },
   });
 
+  if (state.llmUsage) {
+    recordUsage(state.userId, "query", state.llmUsage).catch(console.error);
+  }
+
   return {};
 }
 
@@ -158,14 +162,11 @@ const graph = new StateGraph(QueryState)
 
 export const queryGraph = graph.compile();
 
-export async function runQuery(question: string) {
+export async function runQuery(question: string, userId: string) {
   const result = await queryGraph.invoke({
-    question,
-    indexContent: "",
-    relevantSlugs: [],
-    pagesContent: "",
-    llmResult: null,
-    error: null,
+    question, userId,
+    indexContent: "", relevantSlugs: [], pagesContent: "",
+    llmResult: null, llmUsage: null, error: null,
   });
   if (result.error) throw new Error(result.error);
   return result.llmResult as QueryResult;

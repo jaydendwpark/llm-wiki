@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
-    const result = await runLint();
+    const result = await runLint(auth.userId);
     return NextResponse.json({ success: true, result });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
