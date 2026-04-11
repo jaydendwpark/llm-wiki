@@ -44,7 +44,8 @@ export async function callLLM({
       inputTokens:  response.usageMetadata?.promptTokenCount     ?? 0,
       // candidatesTokenCount excludes thinking tokens; add thoughtsTokenCount for accurate billing
       outputTokens: (response.usageMetadata?.candidatesTokenCount ?? 0) +
-                    (response.usageMetadata?.thoughtsTokenCount    ?? 0),
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    ((response.usageMetadata as any)?.thoughtsTokenCount ?? 0),
     },
   };
 }

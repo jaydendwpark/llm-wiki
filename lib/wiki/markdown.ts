@@ -9,6 +9,7 @@ import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
+import type { Schema } from "hast-util-sanitize";
 import rehypeStringify from "rehype-stringify";
 import { visit } from "unist-util-visit";
 import type { Plugin } from "unified";
@@ -33,7 +34,7 @@ interface WikiLinkNode {
 
 const remarkWikiLinks: Plugin<[], Root> = () => (tree) => {
   visit(tree, "text", (node: Text, index, parent) => {
-    if (!parent || index === null) return;
+    if (!parent || index == null) return;
 
     const matches: Array<{ start: number; end: number; target: string; alias: string }> = [];
     let match: RegExpExecArray | null;
@@ -85,7 +86,7 @@ const remarkWikiLinks: Plugin<[], Root> = () => (tree) => {
 
 // ─── Sanitize schema: allow wiki-link class on <a> tags ──────────────────────
 
-const sanitizeSchema = {
+const sanitizeSchema: Schema = {
   ...defaultSchema,
   attributes: {
     ...defaultSchema.attributes,
