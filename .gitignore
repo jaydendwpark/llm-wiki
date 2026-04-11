@@ -32,3 +32,4 @@ supabase/.temp
 .vscode/settings.json
 .gstack/
 next-env.d.ts
+.vercel
