@@ -7,10 +7,6 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const key = process.env.GEMINI_API_KEY;
-if (!key) throw new Error("GEMINI_API_KEY environment variable is not set");
-const genAI = new GoogleGenerativeAI(key);
-
 export const MODEL_NAME = "gemini-2.5-flash";
 
 export interface LLMUsage {
@@ -30,6 +26,10 @@ export async function callLLM({
   system: string;
   user: string;
 }): Promise<LLMResponse> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) throw new Error("GEMINI_API_KEY environment variable is not set");
+  const genAI = new GoogleGenerativeAI(key);
+
   const model = genAI.getGenerativeModel({
     model: MODEL_NAME,
     systemInstruction: system,
