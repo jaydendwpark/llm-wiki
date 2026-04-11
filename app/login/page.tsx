@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ScrollText, Loader2, Mail, Lock } from "lucide-react";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") ?? "/wiki";
@@ -17,8 +17,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const supabase = createClient();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -26,6 +24,7 @@ export default function LoginPage() {
     setMessage(null);
 
     try {
+      const supabase = createClient();
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -53,7 +52,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex items-center gap-3 mb-8 justify-center">
           <ScrollText className="w-8 h-8 text-wiki-accent" />
-          <span className="text-2xl font-bold text-wiki-text">LLM Wiki</span>
+          <span className="text-2xl font-bold text-wiki-text">Mnemo</span>
         </div>
 
         <div className="bg-wiki-surface border border-wiki-border rounded-2xl p-8">
@@ -125,5 +124,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

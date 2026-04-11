@@ -25,17 +25,20 @@ const NAV = [
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = createClient();
   const [usage, setUsage] = useState<UsageSummary | null>(null);
 
   useEffect(() => {
+    if (pathname === "/login" || pathname.startsWith("/auth")) return;
     fetch("/api/usage")
       .then((r) => r.json())
       .then((d) => { if (d.limitUsd) setUsage(d); })
       .catch(() => {});
-  }, []);
+  }, [pathname]);
+
+  if (pathname === "/login" || pathname.startsWith("/auth")) return null;
 
   const handleSignOut = async () => {
+    const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();

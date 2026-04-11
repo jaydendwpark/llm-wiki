@@ -30,3 +30,5 @@ supabase/.temp
 # Editor
 .idea/
 .vscode/settings.json
+.gstack/
+next-env.d.ts
