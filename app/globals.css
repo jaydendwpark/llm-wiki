@@ -1,0 +1,31 @@
+@import "tailwindcss";
+@import "@tailwindcss/typography";
+
+:root {
+  --background: #0f1117;
+  --foreground: #e2e8f0;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Wiki link styling */
+.wiki-link {
+  color: #818cf8;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s ease;
+}
+.wiki-link:hover {
+  border-bottom-color: #818cf8;
+  color: #a5b4fc;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2d3e; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3d5e; }
