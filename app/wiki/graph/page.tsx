@@ -3,10 +3,12 @@ import { buildGraphData } from "@/lib/wiki/graph";
 import { GraphView } from "@/components/wiki/GraphView";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { getT } from "@/lib/i18n/server";
 
 export const revalidate = 60;
 
 export default async function GraphPage() {
+  const t = await getT();
   const supabase = await createClient();
 
   const [{ data: pages }, { data: links }] = await Promise.all([
@@ -24,11 +26,11 @@ export default async function GraphPage() {
           className="flex items-center gap-1.5 text-wiki-muted hover:text-wiki-text text-sm transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Wiki
+          {t("graph.back")}
         </Link>
-        <h1 className="text-lg font-semibold text-wiki-text">Graph View</h1>
+        <h1 className="text-lg font-semibold text-wiki-text">{t("graph.title")}</h1>
         <span className="text-sm text-wiki-muted ml-auto">
-          {graphData.nodes.length} pages · {graphData.links.length} connections
+          {t("graph.stats", { pages: graphData.nodes.length, links: graphData.links.length })}
         </span>
       </header>
 

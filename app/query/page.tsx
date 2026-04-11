@@ -1,7 +1,9 @@
 import { QueryInterface } from "@/components/query/QueryInterface";
 import { createClient } from "@/lib/supabase/server";
+import { getT } from "@/lib/i18n/server";
 
 export default async function QueryPage() {
+  const t = await getT();
   const supabase = await createClient();
   const { data: recentQueries } = await supabase
     .from("wiki_logs")
@@ -13,10 +15,8 @@ export default async function QueryPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-10">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-wiki-text mb-1">Query</h1>
-        <p className="text-wiki-muted text-sm">
-          Ask questions against your wiki. Great answers are automatically filed back as new pages.
-        </p>
+        <h1 className="text-3xl font-bold text-wiki-text mb-1">{t("query.title")}</h1>
+        <p className="text-wiki-muted text-sm">{t("query.desc")}</p>
       </div>
 
       <QueryInterface />
@@ -24,7 +24,7 @@ export default async function QueryPage() {
       {recentQueries && recentQueries.length > 0 && (
         <section className="mt-12">
           <h2 className="text-xs text-wiki-muted uppercase tracking-widest font-semibold mb-4">
-            Recent queries
+            {t("query.recent")}
           </h2>
           <div className="space-y-2">
             {recentQueries.map((q, i) => (

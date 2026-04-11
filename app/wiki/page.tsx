@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { BookOpen, Network, Plus } from "lucide-react";
+import { getT } from "@/lib/i18n/server";
 
 export const revalidate = 60;
 
 export default async function WikiIndexPage() {
+  const t = await getT();
   const supabase = await createClient();
   const { data: pages } = await supabase
     .from("wiki_pages")
@@ -20,12 +22,11 @@ export default async function WikiIndexPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-8 py-10">
-      {/* Header */}
       <div className="flex items-center justify-between mb-10">
         <div>
-          <h1 className="text-3xl font-bold text-wiki-text mb-1">Wiki</h1>
+          <h1 className="text-3xl font-bold text-wiki-text mb-1">{t("wiki.title")}</h1>
           <p className="text-wiki-muted">
-            {pages?.length ?? 0} pages — AI-maintained knowledge base
+            {t("wiki.subtitle", { count: pages?.length ?? 0 })}
           </p>
         </div>
         <Link
@@ -33,23 +34,21 @@ export default async function WikiIndexPage() {
           className="flex items-center gap-2 bg-wiki-surface border border-wiki-border hover:border-wiki-accent/50 rounded-lg px-4 py-2 text-sm text-wiki-muted hover:text-wiki-text transition-colors"
         >
           <Network className="w-4 h-4" />
-          Graph View
+          {t("wiki.graphView")}
         </Link>
       </div>
 
       {pages?.length === 0 ? (
         <div className="text-center py-20">
           <BookOpen className="w-12 h-12 mx-auto mb-4 text-wiki-muted" />
-          <p className="text-wiki-text font-medium mb-2">Wiki is empty</p>
-          <p className="text-wiki-muted text-sm mb-6">
-            Drop a source in the Raw Sources section to get started
-          </p>
+          <p className="text-wiki-text font-medium mb-2">{t("wiki.empty")}</p>
+          <p className="text-wiki-muted text-sm mb-6">{t("wiki.emptyDesc")}</p>
           <Link
             href="/raw"
             className="inline-flex items-center gap-2 bg-wiki-accent hover:bg-wiki-accent/80 text-white px-5 py-2.5 rounded-lg text-sm transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Add Source
+            {t("wiki.addSource")}
           </Link>
         </div>
       ) : (

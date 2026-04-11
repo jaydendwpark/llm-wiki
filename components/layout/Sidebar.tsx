@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { BookOpen, Upload, Search, Network, Activity, ScrollText, Wrench, Download, LogOut } from "lucide-react";
+import { BookOpen, Search, Network, Activity, ScrollText, Wrench, Download, LogOut, Sparkles, Globe } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SearchDialog } from "./SearchDialog";
+import { useLocale } from "@/lib/i18n/context";
 
 interface UsageSummary {
   month: string;
@@ -14,18 +15,19 @@ interface UsageSummary {
   spentUsd: number;
 }
 
-const NAV = [
-  { href: "/wiki",        icon: BookOpen, label: "Wiki" },
-  { href: "/wiki/graph",  icon: Network,  label: "Graph View" },
-  { href: "/query",       icon: Activity, label: "Query" },
-  { href: "/raw",         icon: Upload,   label: "Raw Sources" },
-  { href: "/lint",        icon: Wrench,   label: "Lint" },
-];
-
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { locale, setLocale, t } = useLocale();
   const [usage, setUsage] = useState<UsageSummary | null>(null);
+
+  const NAV = [
+    { href: "/wiki",        icon: BookOpen,  label: t("nav.wiki") },
+    { href: "/wiki/graph",  icon: Network,   label: t("nav.graph") },
+    { href: "/query",       icon: Activity,  label: t("nav.query") },
+    { href: "/raw",         icon: Sparkles,  label: t("nav.import") },
+    { href: "/lint",        icon: Wrench,    label: t("nav.lint") },
+  ];
 
   useEffect(() => {
     if (pathname === "/login" || pathname.startsWith("/auth")) return;
@@ -49,7 +51,6 @@ export function Sidebar() {
     const data = await res.json();
     if (!data.files) return;
 
-    // Client-side: create individual .md file downloads as a JSON bundle
     const blob = new Blob([JSON.stringify(data.files, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -58,6 +59,8 @@ export function Sidebar() {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const pct = usage ? Math.min(100, (usage.spentUsd / usage.limitUsd) * 100) : 0;
 
   return (
     <>
@@ -80,8 +83,8 @@ export function Sidebar() {
           className="mx-3 mt-3 flex items-center gap-2 bg-wiki-bg border border-wiki-border rounded-lg px-3 py-2 text-wiki-muted hover:text-wiki-text hover:border-wiki-accent/50 transition-colors text-xs"
         >
           <Search className="w-3.5 h-3.5" />
-          <span className="flex-1">Search…</span>
-          <kbd className="text-xs bg-wiki-surface px-1.5 py-0.5 rounded">⌘K</kbd>
+          <span className="flex-1">{t("sidebar.search")}</span>
+          <kbd className="text-xs bg-wiki-surface px-1.5 py-0.5 rounded">\u2318K</kbd>
         </button>
 
         <nav className="flex-1 p-3 space-y-1 mt-2">
@@ -108,41 +111,48 @@ export function Sidebar() {
         {usage && (
           <div className="mx-3 mb-2 px-3 py-2.5 bg-wiki-bg border border-wiki-border rounded-lg">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs text-wiki-muted">AI Budget</span>
+              <span className="text-xs text-wiki-muted">{t("sidebar.budget")}</span>
               <span className="text-xs text-wiki-muted">{usage.month}</span>
             </div>
             <div className="h-1.5 bg-wiki-border rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${
-                  usage.spentUsd / usage.limitUsd > 0.9
+                  pct > 90
                     ? "bg-red-500"
-                    : usage.spentUsd / usage.limitUsd > 0.7
+                    : pct > 70
                     ? "bg-yellow-500"
                     : "bg-wiki-accent"
                 }`}
-                style={{ width: `${Math.min(100, (usage.spentUsd / usage.limitUsd) * 100).toFixed(1)}%` }}
+                style={{ width: `${pct.toFixed(1)}%` }}
               />
             </div>
             <p className="text-xs text-wiki-muted mt-1">
-              ${usage.spentUsd.toFixed(3)} / ${usage.limitUsd.toFixed(2)}
+              {pct.toFixed(0)}%
             </p>
           </div>
         )}
 
         <div className="p-3 border-t border-wiki-border space-y-1">
           <button
+            onClick={() => setLocale(locale === "en" ? "ko" : "en")}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-wiki-muted hover:text-wiki-text hover:bg-wiki-border/50 transition-colors"
+          >
+            <Globe className="w-4 h-4" />
+            {locale === "en" ? "한국어" : "English"}
+          </button>
+          <button
             onClick={handleExport}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-wiki-muted hover:text-wiki-text hover:bg-wiki-border/50 transition-colors"
           >
             <Download className="w-4 h-4" />
-            Export
+            {t("sidebar.export")}
           </button>
           <button
             onClick={handleSignOut}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-wiki-muted hover:text-red-400 hover:bg-red-950/20 transition-colors"
           >
             <LogOut className="w-4 h-4" />
-            Sign out
+            {t("sidebar.signout")}
           </button>
         </div>
       </aside>

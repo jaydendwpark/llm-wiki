@@ -3,11 +3,13 @@
 import { Suspense, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ScrollText, Loader2, Mail, Lock } from "lucide-react";
+import { ScrollText, Loader2, Mail, Lock, Globe } from "lucide-react";
+import { useLocale } from "@/lib/i18n/context";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { locale, setLocale, t } = useLocale();
   const redirectTo = searchParams.get("redirectTo") ?? "/wiki";
 
   const [email, setEmail] = useState("");
@@ -37,7 +39,7 @@ function LoginForm() {
           options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
         });
         if (error) throw error;
-        setMessage("Check your email to confirm your account.");
+        setMessage(t("login.checkEmail"));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Authentication failed");
@@ -49,6 +51,17 @@ function LoginForm() {
   return (
     <div className="min-h-screen bg-wiki-bg flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
+        {/* Language toggle */}
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setLocale(locale === "en" ? "ko" : "en")}
+            className="flex items-center gap-1.5 text-wiki-muted hover:text-wiki-text text-xs transition-colors"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            {locale === "en" ? "한국어" : "English"}
+          </button>
+        </div>
+
         {/* Logo */}
         <div className="flex items-center gap-3 mb-8 justify-center">
           <ScrollText className="w-8 h-8 text-wiki-accent" />
@@ -57,12 +70,10 @@ function LoginForm() {
 
         <div className="bg-wiki-surface border border-wiki-border rounded-2xl p-8">
           <h1 className="text-xl font-semibold text-wiki-text mb-1">
-            {mode === "signin" ? "Sign in" : "Create account"}
+            {mode === "signin" ? t("login.signIn") : t("login.signUp")}
           </h1>
           <p className="text-wiki-muted text-sm mb-6">
-            {mode === "signin"
-              ? "Access your personal knowledge base"
-              : "Start building your wiki"}
+            {mode === "signin" ? t("login.signInDesc") : t("login.signUpDesc")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -70,7 +81,7 @@ function LoginForm() {
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-wiki-muted" />
               <input
                 type="email"
-                placeholder="Email"
+                placeholder={t("login.email")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -82,7 +93,7 @@ function LoginForm() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-wiki-muted" />
               <input
                 type="password"
-                placeholder="Password"
+                placeholder={t("login.password")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -108,17 +119,17 @@ function LoginForm() {
               className="w-full bg-wiki-accent hover:bg-wiki-accent/80 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {mode === "signin" ? "Sign in" : "Create account"}
+              {mode === "signin" ? t("login.signIn") : t("login.signUp")}
             </button>
           </form>
 
           <p className="text-center text-wiki-muted text-sm mt-6">
-            {mode === "signin" ? "Don't have an account?" : "Already have an account?"}{" "}
+            {mode === "signin" ? t("login.noAccount") : t("login.hasAccount")}{" "}
             <button
               onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); }}
               className="text-wiki-link hover:text-wiki-link-hover transition-colors"
             >
-              {mode === "signin" ? "Sign up" : "Sign in"}
+              {mode === "signin" ? t("login.signUpLink") : t("login.signInLink")}
             </button>
           </p>
         </div>

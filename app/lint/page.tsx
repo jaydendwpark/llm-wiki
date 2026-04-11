@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Wrench, Loader2, AlertTriangle, Info, XCircle } from "lucide-react";
 import type { LintIssue } from "@/lib/agents/lint";
+import { useLocale } from "@/lib/i18n/context";
 
 const SEVERITY_ICON = {
   error: <XCircle className="w-4 h-4 text-red-400" />,
@@ -17,6 +18,7 @@ const SEVERITY_BG = {
 };
 
 export default function LintPage() {
+  const { t } = useLocale();
   const [running, setRunning] = useState(false);
   const [issues, setIssues] = useState<LintIssue[] | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
@@ -48,10 +50,8 @@ export default function LintPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-10">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-wiki-text mb-1">Lint</h1>
-        <p className="text-wiki-muted text-sm">
-          Run a health check on your wiki: find orphan pages, broken links, contradictions, and more.
-        </p>
+        <h1 className="text-3xl font-bold text-wiki-text mb-1">{t("lint.title")}</h1>
+        <p className="text-wiki-muted text-sm">{t("lint.desc")}</p>
       </div>
 
       <button
@@ -64,7 +64,7 @@ export default function LintPage() {
         ) : (
           <Wrench className="w-4 h-4" />
         )}
-        {running ? "Analyzing wiki…" : "Run Lint"}
+        {running ? t("lint.running") : t("lint.run")}
       </button>
 
       {error && (
@@ -75,12 +75,11 @@ export default function LintPage() {
 
       {issues !== null && (
         <div className="mt-8 space-y-6">
-          {/* Stats */}
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: "Errors", count: errorCount, color: "text-red-400" },
-              { label: "Warnings", count: warningCount, color: "text-amber-400" },
-              { label: "Info", count: infoCount, color: "text-blue-400" },
+              { label: t("lint.errors"), count: errorCount, color: "text-red-400" },
+              { label: t("lint.warnings"), count: warningCount, color: "text-amber-400" },
+              { label: t("lint.info"), count: infoCount, color: "text-blue-400" },
             ].map(({ label, count, color }) => (
               <div key={label} className="bg-wiki-surface border border-wiki-border rounded-lg p-4 text-center">
                 <p className={`text-2xl font-bold ${color}`}>{count}</p>
@@ -96,7 +95,7 @@ export default function LintPage() {
           )}
 
           {issues.length === 0 ? (
-            <p className="text-center text-wiki-muted py-8">Wiki is healthy — no issues found.</p>
+            <p className="text-center text-wiki-muted py-8">{t("lint.healthy")}</p>
           ) : (
             <div className="space-y-3">
               {issues.map((issue, i) => (

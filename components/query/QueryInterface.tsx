@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Send, BookmarkPlus, Loader2 } from "lucide-react";
 import { WikiRenderer } from "@/components/wiki/WikiRenderer";
+import { useLocale } from "@/lib/i18n/context";
 
 interface QueryResult {
   answer: string;
@@ -12,6 +13,7 @@ interface QueryResult {
 }
 
 export function QueryInterface() {
+  const { t } = useLocale();
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<QueryResult | null>(null);
@@ -48,7 +50,7 @@ export function QueryInterface() {
           type="text"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask anything about your wiki…"
+          placeholder={t("query.placeholder")}
           className="flex-1 bg-wiki-surface border border-wiki-border rounded-lg px-4 py-3 text-wiki-text placeholder-wiki-muted focus:outline-none focus:border-wiki-accent transition-colors"
           disabled={loading}
         />
@@ -58,7 +60,7 @@ export function QueryInterface() {
           className="bg-wiki-accent hover:bg-wiki-accent/80 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-3 rounded-lg transition-colors flex items-center gap-2"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-          {loading ? "Thinking…" : "Ask"}
+          {loading ? t("query.thinking") : t("query.ask")}
         </button>
       </form>
 
@@ -74,7 +76,7 @@ export function QueryInterface() {
 
           {result.citedPages.length > 0 && (
             <div className="pt-4 border-t border-wiki-border">
-              <p className="text-xs text-wiki-muted uppercase tracking-wider mb-2">Sources</p>
+              <p className="text-xs text-wiki-muted uppercase tracking-wider mb-2">{t("query.sources")}</p>
               <div className="flex flex-wrap gap-2">
                 {result.citedPages.map((slug) => (
                   <a
@@ -92,7 +94,7 @@ export function QueryInterface() {
           {result.filedPage && (
             <div className="flex items-center gap-2 text-emerald-400 text-sm pt-2">
               <BookmarkPlus className="w-4 h-4" />
-              Filed as{" "}
+              {t("query.filedAs")}{" "}
               <a href={`/wiki/${result.filedPage.slug}`} className="underline hover:text-emerald-300">
                 {result.filedPage.title}
               </a>

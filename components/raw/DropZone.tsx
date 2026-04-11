@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, FolderOpen } from "lucide-react";
+import { useLocale } from "@/lib/i18n/context";
 
 interface UploadState {
   id: number;
@@ -10,7 +11,32 @@ interface UploadState {
   error?: string;
 }
 
+const ACCEPTED_EXT = /\.(md|txt|pdf|html)$/i;
+
+async function getFilesFromEntry(entry: FileSystemEntry): Promise<File[]> {
+  if (entry.isFile) {
+    const file = await new Promise<File>((resolve, reject) =>
+      (entry as FileSystemFileEntry).file(resolve, reject),
+    );
+    return ACCEPTED_EXT.test(file.name) ? [file] : [];
+  }
+  if (entry.isDirectory) {
+    const reader = (entry as FileSystemDirectoryEntry).createReader();
+    const all: FileSystemEntry[] = [];
+    let batch: FileSystemEntry[];
+    do {
+      batch = await new Promise<FileSystemEntry[]>((resolve) =>
+        reader.readEntries(resolve),
+      );
+      all.push(...batch);
+    } while (batch.length > 0);
+    return (await Promise.all(all.map(getFilesFromEntry))).flat();
+  }
+  return [];
+}
+
 export function DropZone() {
+  const { t } = useLocale();
   const [dragActive, setDragActive] = useState(false);
   const [uploads, setUploads] = useState<UploadState[]>([]);
   const nextId = useRef(0);
@@ -20,7 +46,6 @@ export function DropZone() {
     setUploads((prev) => [...prev, { id, status: "uploading", filename: file.name }]);
 
     try {
-      // 1. Upload file
       const form = new FormData();
       form.append("file", file);
       const uploadRes = await fetch("/api/upload", { method: "POST", body: form });
@@ -29,10 +54,9 @@ export function DropZone() {
       if (uploadError) throw new Error(uploadError);
 
       setUploads((prev) =>
-        prev.map((u) => (u.id === id ? { ...u, status: "ingesting" } : u))
+        prev.map((u) => (u.id === id ? { ...u, status: "ingesting" } : u)),
       );
 
-      // 2. Trigger ingest
       const ingestRes = await fetch("/api/ingest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -43,30 +67,53 @@ export function DropZone() {
       if (ingestError) throw new Error(ingestError);
 
       setUploads((prev) =>
-        prev.map((u) => (u.id === id ? { ...u, status: "done" } : u))
+        prev.map((u) => (u.id === id ? { ...u, status: "done" } : u)),
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed";
       setUploads((prev) =>
-        prev.map((u) => (u.id === id ? { ...u, status: "error", error: message } : u))
+        prev.map((u) => (u.id === id ? { ...u, status: "error", error: message } : u)),
       );
     }
   }, []);
 
   const onDrop = useCallback(
-    (e: React.DragEvent) => {
+    async (e: React.DragEvent) => {
       e.preventDefault();
       setDragActive(false);
-      Array.from(e.dataTransfer.files).forEach(processFile);
+
+      const items = Array.from(e.dataTransfer.items);
+      const entries = items
+        .map((item) => item.webkitGetAsEntry?.())
+        .filter(Boolean) as FileSystemEntry[];
+
+      if (entries.length > 0) {
+        const files = (await Promise.all(entries.map(getFilesFromEntry))).flat();
+        files.forEach(processFile);
+      } else {
+        Array.from(e.dataTransfer.files).forEach(processFile);
+      }
     },
-    [processFile]
+    [processFile],
   );
 
-  const onInputChange = useCallback(
+  const onFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       Array.from(e.target.files ?? []).forEach(processFile);
+      e.target.value = "";
     },
-    [processFile]
+    [processFile],
+  );
+
+  const onFolderInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(e.target.files ?? []).filter((f) =>
+        ACCEPTED_EXT.test(f.name),
+      );
+      files.forEach(processFile);
+      e.target.value = "";
+    },
+    [processFile],
   );
 
   return (
@@ -84,17 +131,35 @@ export function DropZone() {
         onClick={() => document.getElementById("file-input")?.click()}
       >
         <Upload className="w-10 h-10 mx-auto mb-4 text-wiki-muted" />
-        <p className="text-wiki-text font-medium mb-1">Drop sources here or click to browse</p>
-        <p className="text-wiki-muted text-sm">Markdown, text, PDF, HTML — anything you want the wiki to learn from</p>
+        <p className="text-wiki-text font-medium mb-1">{t("import.dropHere")}</p>
+        <p className="text-wiki-muted text-sm">{t("import.dropDesc")}</p>
         <input
           id="file-input"
           type="file"
           className="hidden"
           multiple
           accept=".md,.txt,.pdf,.html"
-          onChange={onInputChange}
+          onChange={onFileInput}
+        />
+        <input
+          id="folder-input"
+          type="file"
+          className="hidden"
+          onChange={onFolderInput}
+          {...({ webkitdirectory: "", directory: "" } as React.InputHTMLAttributes<HTMLInputElement>)}
         />
       </div>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          document.getElementById("folder-input")?.click();
+        }}
+        className="flex items-center gap-2 text-wiki-muted hover:text-wiki-text text-sm transition-colors"
+      >
+        <FolderOpen className="w-4 h-4" />
+        {t("import.uploadFolder")}
+      </button>
 
       {uploads.length > 0 && (
         <div className="space-y-2">
@@ -107,22 +172,22 @@ export function DropZone() {
               <span className="text-sm text-wiki-text flex-1 truncate">{u.filename}</span>
               {u.status === "uploading" && (
                 <span className="flex items-center gap-1.5 text-xs text-wiki-muted">
-                  <Loader2 className="w-3 h-3 animate-spin" /> Uploading…
+                  <Loader2 className="w-3 h-3 animate-spin" /> {t("import.uploading")}
                 </span>
               )}
               {u.status === "ingesting" && (
                 <span className="flex items-center gap-1.5 text-xs text-wiki-accent">
-                  <Loader2 className="w-3 h-3 animate-spin" /> Ingesting into wiki…
+                  <Loader2 className="w-3 h-3 animate-spin" /> {t("import.ingesting")}
                 </span>
               )}
               {u.status === "done" && (
                 <span className="flex items-center gap-1.5 text-xs text-emerald-400">
-                  <CheckCircle className="w-3 h-3" /> Done
+                  <CheckCircle className="w-3 h-3" /> {t("import.done")}
                 </span>
               )}
               {u.status === "error" && (
                 <span className="flex items-center gap-1.5 text-xs text-red-400" title={u.error}>
-                  <AlertCircle className="w-3 h-3" /> Error
+                  <AlertCircle className="w-3 h-3" /> {t("import.error")}
                 </span>
               )}
             </div>

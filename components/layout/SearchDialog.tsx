@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X, BookOpen } from "lucide-react";
+import { useLocale } from "@/lib/i18n/context";
 
 interface SearchResult {
   slug: string;
@@ -12,6 +13,7 @@ interface SearchResult {
 }
 
 export function SearchDialog() {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -21,7 +23,6 @@ export function SearchDialog() {
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Open on Cmd+K / Ctrl+K
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -34,7 +35,6 @@ export function SearchDialog() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Focus input when opened
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 50);
@@ -85,7 +85,6 @@ export function SearchDialog() {
         className="w-full max-w-xl bg-wiki-surface border border-wiki-border rounded-2xl shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-wiki-border">
           <Search className="w-4 h-4 text-wiki-muted shrink-0" />
           <input
@@ -93,18 +92,17 @@ export function SearchDialog() {
             value={query}
             onChange={handleInput}
             onKeyDown={handleKeyDown}
-            placeholder="Search wiki pages…"
+            placeholder={t("search.placeholder")}
             className="flex-1 bg-transparent text-wiki-text placeholder-wiki-muted focus:outline-none text-sm"
           />
           {loading && (
-            <span className="text-xs text-wiki-muted">Searching…</span>
+            <span className="text-xs text-wiki-muted">{t("search.searching")}</span>
           )}
           <button onClick={() => setOpen(false)} className="text-wiki-muted hover:text-wiki-text transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Results */}
         {results.length > 0 && (
           <ul className="py-2 max-h-80 overflow-y-auto">
             {results.map((r, i) => (
@@ -129,13 +127,15 @@ export function SearchDialog() {
         )}
 
         {query && !loading && results.length === 0 && (
-          <p className="text-center text-wiki-muted text-sm py-8">No results for "{query}"</p>
+          <p className="text-center text-wiki-muted text-sm py-8">
+            {t("search.noResults", { query })}
+          </p>
         )}
 
         <div className="px-4 py-2 border-t border-wiki-border flex gap-4 text-xs text-wiki-muted">
-          <span><kbd className="bg-wiki-bg px-1.5 py-0.5 rounded text-xs">↑↓</kbd> navigate</span>
-          <span><kbd className="bg-wiki-bg px-1.5 py-0.5 rounded text-xs">↵</kbd> open</span>
-          <span><kbd className="bg-wiki-bg px-1.5 py-0.5 rounded text-xs">esc</kbd> close</span>
+          <span><kbd className="bg-wiki-bg px-1.5 py-0.5 rounded text-xs">\u2191\u2193</kbd> {t("search.navigate")}</span>
+          <span><kbd className="bg-wiki-bg px-1.5 py-0.5 rounded text-xs">\u21b5</kbd> {t("search.open")}</span>
+          <span><kbd className="bg-wiki-bg px-1.5 py-0.5 rounded text-xs">esc</kbd> {t("search.close")}</span>
         </div>
       </div>
     </div>
