@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { ChatView } from "@/components/chat/ChatView";
 
 export default function Home() {
-  redirect("/wiki");
+  return <ChatView />;
 }

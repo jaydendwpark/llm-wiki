@@ -3,7 +3,21 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { BookOpen, Search, Network, Activity, ScrollText, Wrench, Download, LogOut, Sparkles, Globe } from "lucide-react";
+import {
+  BookOpen,
+  Search,
+  Network,
+  Activity,
+  Wrench,
+  Download,
+  LogOut,
+  Sparkles,
+  Globe,
+  ScrollText,
+  Menu,
+  X,
+  MessageCircle,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { SearchDialog } from "./SearchDialog";
 import { useLocale } from "@/lib/i18n/context";
@@ -20,13 +34,15 @@ export function Sidebar() {
   const router = useRouter();
   const { locale, setLocale, t } = useLocale();
   const [usage, setUsage] = useState<UsageSummary | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const NAV = [
-    { href: "/wiki",        icon: BookOpen,  label: t("nav.wiki") },
-    { href: "/wiki/graph",  icon: Network,   label: t("nav.graph") },
-    { href: "/query",       icon: Activity,  label: t("nav.query") },
-    { href: "/raw",         icon: Sparkles,  label: t("nav.import") },
-    { href: "/lint",        icon: Wrench,    label: t("nav.lint") },
+    { href: "/",           icon: MessageCircle, label: t("nav.chat") },
+    { href: "/wiki",       icon: BookOpen,      label: t("nav.wiki") },
+    { href: "/wiki/graph", icon: Network,       label: t("nav.graph") },
+    { href: "/query",      icon: Activity,      label: t("nav.query") },
+    { href: "/raw",        icon: Sparkles,      label: t("nav.import") },
+    { href: "/lint",       icon: Wrench,        label: t("nav.lint") },
   ];
 
   useEffect(() => {
@@ -35,6 +51,11 @@ export function Sidebar() {
       .then((r) => r.json())
       .then((d) => { if (d.limitUsd) setUsage(d); })
       .catch(() => {});
+  }, [pathname]);
+
+  // Close sidebar on navigation
+  useEffect(() => {
+    setMobileOpen(false);
   }, [pathname]);
 
   if (pathname === "/login" || pathname.startsWith("/auth")) return null;
@@ -62,21 +83,64 @@ export function Sidebar() {
 
   const pct = usage ? Math.min(100, (usage.spentUsd / usage.limitUsd) * 100) : 0;
 
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    if (href === "/wiki") return pathname === "/wiki" || (pathname.startsWith("/wiki/") && !pathname.startsWith("/wiki/graph"));
+    return pathname === href || pathname.startsWith(href + "/");
+  };
+
   return (
     <>
       <SearchDialog />
-      <aside className="w-56 min-h-screen bg-wiki-surface border-r border-wiki-border flex flex-col shrink-0">
-        <div className="p-5 border-b border-wiki-border">
-          <div className="flex items-center gap-2.5">
-            <ScrollText className="w-5 h-5 text-wiki-accent" />
-            <span className="font-semibold text-wiki-text tracking-tight">Mnemo</span>
+
+      {/* Mobile header */}
+      <header className="fixed top-0 left-0 right-0 h-14 bg-wiki-surface border-b border-wiki-border flex items-center px-4 z-40 md:hidden">
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="w-9 h-9 flex items-center justify-center rounded-lg text-wiki-muted hover:text-wiki-text transition-colors"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <div className="flex items-center gap-2 ml-3">
+          <ScrollText className="w-4 h-4 text-wiki-accent" />
+          <span className="font-semibold text-wiki-text text-sm tracking-tight">Mnemo</span>
+        </div>
+      </header>
+
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed top-0 left-0 bottom-0 w-56 bg-wiki-surface border-r border-wiki-border flex flex-col z-50 transition-transform duration-200 ease-out md:static md:translate-x-0 ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="p-5 border-b border-wiki-border flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <ScrollText className="w-5 h-5 text-wiki-accent" />
+              <span className="font-semibold text-wiki-text tracking-tight">Mnemo</span>
+            </div>
+            <p className="text-xs text-wiki-muted mt-1">mnemo.wiki</p>
           </div>
-          <p className="text-xs text-wiki-muted mt-1">mnemo.wiki</p>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-wiki-muted hover:text-wiki-text transition-colors md:hidden"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Search hint */}
         <button
           onClick={() => {
+            setMobileOpen(false);
             const event = new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true });
             window.dispatchEvent(event);
           }}
@@ -84,27 +148,24 @@ export function Sidebar() {
         >
           <Search className="w-3.5 h-3.5" />
           <span className="flex-1">{t("sidebar.search")}</span>
-          <kbd className="text-xs bg-wiki-surface px-1.5 py-0.5 rounded">\u2318K</kbd>
+          <kbd className="text-xs bg-wiki-surface px-1.5 py-0.5 rounded">{"\u2318"}K</kbd>
         </button>
 
         <nav className="flex-1 p-3 space-y-1 mt-2">
-          {NAV.map(({ href, icon: Icon, label }) => {
-            const active = pathname === href || (href !== "/wiki" && pathname.startsWith(href + "/")) || (href === "/wiki" && (pathname === "/wiki" || (pathname.startsWith("/wiki/") && !pathname.startsWith("/wiki/graph"))));
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                  active
-                    ? "bg-wiki-accent/20 text-wiki-accent"
-                    : "text-wiki-muted hover:text-wiki-text hover:bg-wiki-border/50"
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {label}
-              </Link>
-            );
-          })}
+          {NAV.map(({ href, icon: Icon, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                isActive(href)
+                  ? "bg-wiki-accent/20 text-wiki-accent"
+                  : "text-wiki-muted hover:text-wiki-text hover:bg-wiki-border/50"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </Link>
+          ))}
         </nav>
 
         {/* Monthly budget widget */}

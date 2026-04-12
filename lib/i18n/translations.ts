@@ -2,6 +2,7 @@ export type Locale = "en" | "ko";
 
 const translations = {
   // Sidebar nav
+  "nav.chat": { en: "Chat", ko: "채팅" },
   "nav.wiki": { en: "Wiki", ko: "위키" },
   "nav.graph": { en: "Graph View", ko: "그래프 뷰" },
   "nav.query": { en: "Query", ko: "질문하기" },
@@ -156,6 +157,24 @@ const translations = {
   "search.navigate": { en: "navigate", ko: "이동" },
   "search.open": { en: "open", ko: "열기" },
   "search.close": { en: "close", ko: "닫기" },
+
+  // Chat
+  "chat.welcome": { en: "Welcome to Mnemo", ko: "Mnemo에 오신 것을 환영합니다" },
+  "chat.welcomeDesc": {
+    en: "Ask questions about your wiki, upload documents, or write memos. Paste a URL to import from the web.",
+    ko: "위키에 질문하거나, 문서를 업로드하거나, 메모를 작성하세요. URL을 붙여넣으면 웹에서 가져옵니다.",
+  },
+  "chat.placeholder": {
+    en: "Ask anything, paste a URL, or drop files\u2026",
+    ko: "질문하거나 URL을 붙여넣거나 파일을 드롭하세요\u2026",
+  },
+  "chat.uploadFile": { en: "Upload file", ko: "파일 업로드" },
+  "chat.uploadFolder": { en: "Upload folder", ko: "폴더 업로드" },
+  "chat.writeMemo": { en: "Write memo", ko: "메모 작성" },
+  "chat.pagesCreated": {
+    en: "{count} pages created",
+    ko: "{count}개 페이지 생성",
+  },
 
   // Login
   "login.signIn": { en: "Sign in", ko: "로그인" },
