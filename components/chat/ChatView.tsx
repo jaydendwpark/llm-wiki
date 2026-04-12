@@ -330,10 +330,60 @@ export function ChatView() {
     [handleFileUpload],
   );
 
+  /* ── Drag & drop ── */
+  const [dragActive, setDragActive] = useState(false);
+
+  const onDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(true);
+  }, []);
+
+  const onDragLeave = useCallback((e: React.DragEvent) => {
+    // Only deactivate when leaving the container (not entering a child)
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setDragActive(false);
+  }, []);
+
+  const onDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragActive(false);
+      const items = Array.from(e.dataTransfer.items);
+      const entries = items
+        .map((item) => item.webkitGetAsEntry?.())
+        .filter(Boolean) as FileSystemEntry[];
+      if (entries.length > 0) {
+        const files = (await Promise.all(entries.map(getFilesFromEntry))).flat();
+        files.forEach(handleFileUpload);
+      } else {
+        Array.from(e.dataTransfer.files)
+          .filter((f) => ACCEPTED_EXT.test(f.name))
+          .forEach(handleFileUpload);
+      }
+    },
+    [handleFileUpload],
+  );
+
   /* ── Render ── */
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-3.5rem)] md:h-screen">
+    <div
+      className="flex flex-col h-[calc(100dvh-3.5rem)] md:h-screen relative"
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+    >
+      {/* Drop overlay */}
+      {dragActive && (
+        <div className="absolute inset-0 z-50 bg-wiki-bg/80 backdrop-blur-sm flex items-center justify-center border-2 border-dashed border-wiki-accent rounded-xl pointer-events-none">
+          <div className="text-center">
+            <FileText className="w-10 h-10 text-wiki-accent mx-auto mb-3" />
+            <p className="text-wiki-text font-medium">{t("import.dropHere")}</p>
+            <p className="text-wiki-muted text-sm mt-1">{t("import.dropDesc")}</p>
+          </div>
+        </div>
+      )}
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
