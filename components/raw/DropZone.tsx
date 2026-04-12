@@ -181,12 +181,12 @@ export function DropZone() {
                 </span>
               )}
               {u.status === "done" && (
-                <span className="flex items-center gap-1.5 text-xs text-emerald-600">
+                <span className="flex items-center gap-1.5 text-xs text-wiki-ok">
                   <CheckCircle className="w-3 h-3" /> {t("import.done")}
                 </span>
               )}
               {u.status === "error" && (
-                <span className="flex items-center gap-1.5 text-xs text-red-600" title={u.error}>
+                <span className="flex items-center gap-1.5 text-xs text-wiki-err" title={u.error}>
                   <AlertCircle className="w-3 h-3" /> {t("import.error")}
                 </span>
               )}

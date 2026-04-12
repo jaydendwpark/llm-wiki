@@ -37,7 +37,7 @@ export default async function RawPage() {
                 <FileText className="w-4 h-4 text-wiki-muted shrink-0" />
                 <span className="text-sm text-wiki-text flex-1 truncate">{s.filename}</span>
                 {s.ingested ? (
-                  <span className="flex items-center gap-1.5 text-xs text-emerald-600 shrink-0">
+                  <span className="flex items-center gap-1.5 text-xs text-wiki-ok shrink-0">
                     <CheckCircle className="w-3 h-3" />
                     {t("import.ingested")}
                   </span>

@@ -103,12 +103,12 @@ function LoginForm() {
             </div>
 
             {error && (
-              <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <p className="text-wiki-err text-sm bg-wiki-err-soft border border-wiki-err/20 rounded-lg px-3 py-2">
                 {error}
               </p>
             )}
             {message && (
-              <p className="text-emerald-600 text-sm bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+              <p className="text-wiki-ok text-sm bg-wiki-ok-soft border border-wiki-ok/20 rounded-lg px-3 py-2">
                 {message}
               </p>
             )}

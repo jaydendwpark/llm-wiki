@@ -65,7 +65,7 @@ export function QueryInterface() {
       </form>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-600 text-sm">
+        <div className="bg-wiki-err-soft border border-wiki-err/20 rounded-lg px-4 py-3 text-wiki-err text-sm">
           {error}
         </div>
       )}
@@ -92,10 +92,10 @@ export function QueryInterface() {
           )}
 
           {result.filedPage && (
-            <div className="flex items-center gap-2 text-emerald-600 text-sm pt-2">
+            <div className="flex items-center gap-2 text-wiki-ok text-sm pt-2">
               <BookmarkPlus className="w-4 h-4" />
               {t("query.filedAs")}{" "}
-              <a href={`/wiki/${result.filedPage.slug}`} className="underline hover:text-emerald-500">
+              <a href={`/wiki/${result.filedPage.slug}`} className="underline hover:text-wiki-ok">
                 {result.filedPage.title}
               </a>
             </div>

@@ -176,6 +176,14 @@ const translations = {
     ko: "{count}개 페이지 생성",
   },
 
+  // Theme
+  "theme.title": { en: "Theme", ko: "테마" },
+  "theme.light": { en: "Light", ko: "라이트" },
+  "theme.dark": { en: "Dark", ko: "다크" },
+  "theme.kitsch": { en: "Kitsch", ko: "키치" },
+  "theme.dog": { en: "Dog", ko: "강아지" },
+  "theme.cat": { en: "Cat", ko: "고양이" },
+
   // Login
   "login.signIn": { en: "Sign in", ko: "로그인" },
   "login.signUp": { en: "Create account", ko: "회원가입" },

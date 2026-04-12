@@ -6,15 +6,15 @@ import type { LintIssue } from "@/lib/agents/lint";
 import { useLocale } from "@/lib/i18n/context";
 
 const SEVERITY_ICON = {
-  error: <XCircle className="w-4 h-4 text-red-600" />,
-  warning: <AlertTriangle className="w-4 h-4 text-amber-600" />,
-  info: <Info className="w-4 h-4 text-blue-600" />,
+  error: <XCircle className="w-4 h-4 text-wiki-err" />,
+  warning: <AlertTriangle className="w-4 h-4 text-wiki-warn" />,
+  info: <Info className="w-4 h-4 text-wiki-info" />,
 };
 
 const SEVERITY_BG = {
-  error: "border-red-200 bg-red-50",
-  warning: "border-amber-200 bg-amber-50",
-  info: "border-blue-200 bg-blue-50",
+  error: "border-wiki-err/20 bg-wiki-err-soft",
+  warning: "border-wiki-warn/20 bg-wiki-warn-soft",
+  info: "border-wiki-info/20 bg-wiki-info-soft",
 };
 
 export default function LintPage() {
@@ -68,7 +68,7 @@ export default function LintPage() {
       </button>
 
       {error && (
-        <div className="mt-6 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-600 text-sm">
+        <div className="mt-6 bg-wiki-err-soft border border-wiki-err/20 rounded-lg px-4 py-3 text-wiki-err text-sm">
           {error}
         </div>
       )}
@@ -77,9 +77,9 @@ export default function LintPage() {
         <div className="mt-8 space-y-6">
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: t("lint.errors"), count: errorCount, color: "text-red-600" },
-              { label: t("lint.warnings"), count: warningCount, color: "text-amber-600" },
-              { label: t("lint.info"), count: infoCount, color: "text-blue-600" },
+              { label: t("lint.errors"), count: errorCount, color: "text-wiki-err" },
+              { label: t("lint.warnings"), count: warningCount, color: "text-wiki-warn" },
+              { label: t("lint.info"), count: infoCount, color: "text-wiki-info" },
             ].map(({ label, count, color }) => (
               <div key={label} className="bg-wiki-surface border border-wiki-border rounded-lg p-4 text-center">
                 <p className={`text-2xl font-bold ${color}`}>{count}</p>
