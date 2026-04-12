@@ -136,7 +136,7 @@ export function Sidebar() {
 
       {/* ═══ Mobile: top header + nav pills ═══ */}
       <div className="fixed top-0 left-0 right-0 z-40 md:hidden">
-        <div className="flex items-center justify-between px-4 h-12 bg-wiki-surface/80 backdrop-blur-xl border-b border-wiki-border/40">
+        <div className="relative z-10 flex items-center justify-between px-4 h-12 bg-wiki-surface/80 backdrop-blur-xl border-b border-wiki-border/40">
           <Link href="/" className="flex items-center gap-2">
             <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${themeLogoBadge[theme]?.gradient ?? "from-violet-500 to-fuchsia-500"} flex items-center justify-center`}>
               {themeLogoBadge[theme] ? (
