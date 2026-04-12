@@ -16,7 +16,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale();
 
   return (
-    <html lang={locale} className={`dark ${inter.variable}`}>
+    <html lang={locale} className={inter.variable}>
       <body className="flex min-h-screen bg-wiki-bg text-wiki-text font-sans">
         <LocaleProvider initialLocale={locale}>
           <Sidebar />

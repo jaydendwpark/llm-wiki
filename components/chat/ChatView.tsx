@@ -369,7 +369,7 @@ export function ChatView() {
   return (
     <div className="md:p-4 md:h-screen">
       <div
-        className="flex flex-col h-[calc(100dvh-5.5rem)] md:h-full md:bg-wiki-surface/30 md:rounded-2xl md:border md:border-wiki-border/40 md:shadow-xl md:shadow-black/10 relative overflow-hidden"
+        className="flex flex-col h-[calc(100dvh-5.5rem)] md:h-full md:bg-white md:rounded-2xl md:border md:border-wiki-border/60 md:shadow-xl md:shadow-black/5 relative overflow-hidden"
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
@@ -437,7 +437,7 @@ export function ChatView() {
                 {/* User message */}
                 {msg.role === "user" && (
                   <div className="flex justify-end">
-                    <div className="bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-500/25 rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]">
+                    <div className="bg-gradient-to-br from-violet-50 to-fuchsia-50 border border-violet-200 rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]">
                       <p className="text-sm text-wiki-text whitespace-pre-wrap">
                         {msg.content}
                       </p>
@@ -448,7 +448,7 @@ export function ChatView() {
                 {/* Assistant message */}
                 {msg.role === "assistant" && (
                   <div className="flex justify-start">
-                    <div className="bg-wiki-surface/80 border border-wiki-border/50 rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%] space-y-3">
+                    <div className="bg-white border border-wiki-border/60 rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%] shadow-sm space-y-3">
                       <WikiRenderer
                         content={msg.content}
                         className="text-sm"
@@ -474,12 +474,12 @@ export function ChatView() {
                       )}
 
                       {msg.filedPage && (
-                        <div className="flex items-center gap-1.5 text-emerald-400 text-xs pt-1">
+                        <div className="flex items-center gap-1.5 text-emerald-600 text-xs pt-1">
                           <CheckCircle className="w-3 h-3" />
                           {t("query.filedAs")}{" "}
                           <a
                             href={`/wiki/${msg.filedPage.slug}`}
-                            className="underline hover:text-emerald-300"
+                            className="underline hover:text-emerald-500"
                           >
                             {msg.filedPage.title}
                           </a>
@@ -492,7 +492,7 @@ export function ChatView() {
                 {/* System/upload message */}
                 {msg.role === "system" && msg.type === "upload" && (
                   <div className="flex justify-start">
-                    <div className="bg-wiki-surface/50 border border-wiki-border/40 rounded-xl px-4 py-2.5 max-w-[85%] flex items-center gap-3">
+                    <div className="bg-white border border-wiki-border/50 rounded-xl px-4 py-2.5 max-w-[85%] shadow-sm flex items-center gap-3">
                       <FileText className="w-4 h-4 text-wiki-muted shrink-0" />
                       <span className="text-sm text-wiki-text truncate flex-1">
                         {msg.uploadName}
@@ -512,7 +512,7 @@ export function ChatView() {
                         </span>
                       )}
                       {msg.uploadStatus === "done" && (
-                        <span className="flex items-center gap-1 text-xs text-emerald-400 shrink-0">
+                        <span className="flex items-center gap-1 text-xs text-emerald-600 shrink-0">
                           <CheckCircle className="w-3 h-3" />
                           {msg.pagesCreated
                             ? t("chat.pagesCreated", { count: msg.pagesCreated })
@@ -521,7 +521,7 @@ export function ChatView() {
                       )}
                       {msg.uploadStatus === "error" && (
                         <span
-                          className="flex items-center gap-1 text-xs text-red-400 shrink-0"
+                          className="flex items-center gap-1 text-xs text-red-600 shrink-0"
                           title={msg.error}
                         >
                           <AlertCircle className="w-3 h-3" />
@@ -535,7 +535,7 @@ export function ChatView() {
                 {/* System error (query) */}
                 {msg.role === "system" && msg.type === "query" && (
                   <div className="flex justify-start">
-                    <div className="bg-red-950/20 border border-red-800/40 rounded-xl px-4 py-2.5 text-sm text-red-400">
+                    <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-2.5 text-sm text-red-600">
                       {msg.content}
                     </div>
                   </div>
@@ -545,7 +545,7 @@ export function ChatView() {
 
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-wiki-surface/80 border border-wiki-border/50 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2">
+                <div className="bg-white border border-wiki-border/60 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 shadow-sm">
                   <Loader2 className="w-4 h-4 animate-spin text-wiki-accent" />
                   <span className="text-sm text-wiki-muted">
                     {t("query.thinking")}
@@ -559,7 +559,7 @@ export function ChatView() {
         </div>
 
         {/* Input bar */}
-        <div className="shrink-0 border-t border-wiki-border/40 bg-wiki-surface/60 backdrop-blur-xl">
+        <div className="shrink-0 border-t border-wiki-border/40 bg-white/90 backdrop-blur-xl">
           <div className="max-w-2xl mx-auto px-4 py-3">
             {/* Memo mode header */}
             {memoMode && (

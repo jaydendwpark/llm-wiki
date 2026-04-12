@@ -103,7 +103,7 @@ export default function EditPage({ params }: Props) {
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className="flex items-center gap-2 text-red-400 hover:text-red-300 text-sm transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 text-red-600 hover:text-red-500 text-sm transition-colors disabled:opacity-50"
           >
             {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
             {t("edit.delete")}
@@ -120,7 +120,7 @@ export default function EditPage({ params }: Props) {
       </div>
 
       {error && (
-        <div className="mb-4 bg-red-950/30 border border-red-800 rounded-lg px-4 py-3 text-red-400 text-sm">
+        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-600 text-sm">
           {error}
         </div>
       )}

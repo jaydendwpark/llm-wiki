@@ -405,13 +405,13 @@ export function BuildWikiInput() {
                 </span>
               )}
               {u.status === "done" && (
-                <span className="flex items-center gap-1.5 text-xs text-emerald-400">
+                <span className="flex items-center gap-1.5 text-xs text-emerald-600">
                   <CheckCircle className="w-3 h-3" /> {t("import.done")}
                 </span>
               )}
               {u.status === "error" && (
                 <span
-                  className="flex items-center gap-1.5 text-xs text-red-400"
+                  className="flex items-center gap-1.5 text-xs text-red-600"
                   title={u.error}
                 >
                   <AlertCircle className="w-3 h-3" /> {t("import.error")}

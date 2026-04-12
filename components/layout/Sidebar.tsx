@@ -145,7 +145,7 @@ export function Sidebar() {
                   </button>
                   <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-red-950/20 transition-colors"
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
                     {t("sidebar.signout")}
@@ -176,7 +176,7 @@ export function Sidebar() {
       </div>
 
       {/* ═══ Desktop: sidebar ═══ */}
-      <aside className="hidden md:flex w-56 min-h-screen bg-wiki-surface/50 backdrop-blur-xl border-r border-wiki-border/40 flex-col shrink-0">
+      <aside className="hidden md:flex w-56 min-h-screen bg-white/90 backdrop-blur-xl border-r border-wiki-border/40 flex-col shrink-0">
         <div className="p-5 border-b border-wiki-border/40">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/20">
@@ -252,7 +252,7 @@ export function Sidebar() {
           </button>
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-wiki-muted hover:text-red-400 hover:bg-red-950/20 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-wiki-muted hover:text-red-600 hover:bg-red-50 transition-colors"
           >
             <LogOut className="w-4 h-4" />
             {t("sidebar.signout")}

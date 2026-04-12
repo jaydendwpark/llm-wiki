@@ -78,7 +78,7 @@ export function SearchDialog() {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start justify-center pt-[15vh]"
+      className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-start justify-center pt-[15vh]"
       onClick={() => setOpen(false)}
     >
       <div
