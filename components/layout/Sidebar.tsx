@@ -101,10 +101,10 @@ export function Sidebar() {
         >
           <Menu className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-2 ml-3">
+        <Link href="/" className="flex items-center gap-2 ml-3">
           <ScrollText className="w-4 h-4 text-wiki-accent" />
           <span className="font-semibold text-wiki-text text-sm tracking-tight">Mnemo</span>
-        </div>
+        </Link>
       </header>
 
       {/* Mobile backdrop */}
@@ -122,13 +122,13 @@ export function Sidebar() {
         }`}
       >
         <div className="p-5 border-b border-wiki-border flex items-center justify-between">
-          <div>
+          <Link href="/">
             <div className="flex items-center gap-2.5">
               <ScrollText className="w-5 h-5 text-wiki-accent" />
               <span className="font-semibold text-wiki-text tracking-tight">Mnemo</span>
             </div>
             <p className="text-xs text-wiki-muted mt-1">mnemo.wiki</p>
-          </div>
+          </Link>
           <button
             onClick={() => setMobileOpen(false)}
             className="w-8 h-8 flex items-center justify-center rounded-lg text-wiki-muted hover:text-wiki-text transition-colors md:hidden"

@@ -110,7 +110,7 @@ async function persistPages(state: typeof IngestState.State) {
   for (const page of allPages) {
     const outboundLinks = extractOutboundLinks(page.content);
 
-    await supabase
+    const { error: upsertErr } = await supabase
       .from("wiki_pages")
       .upsert(
         {
@@ -120,19 +120,26 @@ async function persistPages(state: typeof IngestState.State) {
         },
         { onConflict: "slug" }
       );
+    if (upsertErr) {
+      console.error(`[ingest] upsert wiki_pages failed for ${page.slug}:`, upsertErr.message);
+    }
 
-    await supabase.from("wiki_links").delete().eq("from_slug", page.slug);
+    const { error: delErr } = await supabase.from("wiki_links").delete().eq("from_slug", page.slug);
+    if (delErr) console.error(`[ingest] delete wiki_links failed:`, delErr.message);
+
     if (outboundLinks.length > 0) {
-      await supabase.from("wiki_links").insert(
-        outboundLinks.map((to) => ({ from_slug: page.slug, to_slug: to }))
+      const { error: linkErr } = await supabase.from("wiki_links").insert(
+        outboundLinks.map((to) => ({ from_slug: page.slug, to_slug: to, user_id: state.userId }))
       );
+      if (linkErr) console.error(`[ingest] insert wiki_links failed:`, linkErr.message);
     }
   }
 
-  await supabase
+  const { error: markErr } = await supabase
     .from("raw_sources")
     .update({ ingested: true, ingested_at: new Date().toISOString() })
     .eq("id", state.sourceId);
+  if (markErr) console.error(`[ingest] mark ingested failed:`, markErr.message);
 
   return {};
 }
