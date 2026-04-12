@@ -20,7 +20,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="flex min-h-screen bg-wiki-bg text-wiki-text font-sans">
         <LocaleProvider initialLocale={locale}>
           <Sidebar />
-          <main className="flex-1 min-w-0 pt-14 md:pt-0">{children}</main>
+          <main className="flex-1 min-w-0 pt-[5.5rem] md:pt-0">{children}</main>
         </LocaleProvider>
       </body>
     </html>

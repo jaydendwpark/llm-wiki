@@ -7,12 +7,13 @@ import {
   Loader2,
   FileText,
   PenLine,
-  Link as LinkIcon,
   FolderOpen,
   X,
   CheckCircle,
   AlertCircle,
   ScrollText,
+  Upload,
+  MessageSquare,
 } from "lucide-react";
 import { useLocale } from "@/lib/i18n/context";
 import { WikiRenderer } from "@/components/wiki/WikiRenderer";
@@ -339,7 +340,6 @@ export function ChatView() {
   }, []);
 
   const onDragLeave = useCallback((e: React.DragEvent) => {
-    // Only deactivate when leaving the container (not entering a child)
     if (e.currentTarget.contains(e.relatedTarget as Node)) return;
     setDragActive(false);
   }, []);
@@ -367,284 +367,316 @@ export function ChatView() {
   /* ── Render ── */
 
   return (
-    <div
-      className="flex flex-col h-[calc(100dvh-3.5rem)] md:h-screen relative"
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
-    >
-      {/* Drop overlay */}
-      {dragActive && (
-        <div className="absolute inset-0 z-50 bg-wiki-bg/80 backdrop-blur-sm flex items-center justify-center border-2 border-dashed border-wiki-accent rounded-xl pointer-events-none">
-          <div className="text-center">
-            <FileText className="w-10 h-10 text-wiki-accent mx-auto mb-3" />
-            <p className="text-wiki-text font-medium">{t("import.dropHere")}</p>
-            <p className="text-wiki-muted text-sm mt-1">{t("import.dropDesc")}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-          {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <ScrollText className="w-10 h-10 text-wiki-accent mb-4" />
-              <h2 className="text-lg font-semibold text-wiki-text mb-2">
-                {t("chat.welcome")}
-              </h2>
-              <p className="text-wiki-muted text-sm max-w-sm">
-                {t("chat.welcomeDesc")}
-              </p>
-            </div>
-          )}
-
-          {messages.map((msg) => (
-            <div key={msg.id}>
-              {/* User message */}
-              {msg.role === "user" && (
-                <div className="flex justify-end">
-                  <div className="bg-wiki-accent/20 border border-wiki-accent/30 rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]">
-                    <p className="text-sm text-wiki-text whitespace-pre-wrap">
-                      {msg.content}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Assistant message */}
-              {msg.role === "assistant" && (
-                <div className="flex justify-start">
-                  <div className="bg-wiki-surface border border-wiki-border rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%] space-y-3">
-                    <WikiRenderer
-                      content={msg.content}
-                      className="text-sm"
-                    />
-
-                    {msg.sources && msg.sources.length > 0 && (
-                      <div className="pt-2 border-t border-wiki-border">
-                        <p className="text-xs text-wiki-muted mb-1.5">
-                          {t("query.sources")}
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {msg.sources.map((slug) => (
-                            <a
-                              key={slug}
-                              href={`/wiki/${slug}`}
-                              className="text-xs bg-wiki-bg border border-wiki-border rounded px-2 py-0.5 text-wiki-link hover:text-wiki-link-hover transition-colors"
-                            >
-                              {slug}
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {msg.filedPage && (
-                      <div className="flex items-center gap-1.5 text-emerald-400 text-xs pt-1">
-                        <CheckCircle className="w-3 h-3" />
-                        {t("query.filedAs")}{" "}
-                        <a
-                          href={`/wiki/${msg.filedPage.slug}`}
-                          className="underline hover:text-emerald-300"
-                        >
-                          {msg.filedPage.title}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* System/upload message */}
-              {msg.role === "system" && msg.type === "upload" && (
-                <div className="flex justify-start">
-                  <div className="bg-wiki-surface/50 border border-wiki-border rounded-xl px-4 py-2.5 max-w-[85%] flex items-center gap-3">
-                    <FileText className="w-4 h-4 text-wiki-muted shrink-0" />
-                    <span className="text-sm text-wiki-text truncate flex-1">
-                      {msg.uploadName}
-                    </span>
-                    {msg.uploadStatus === "uploading" && (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-wiki-muted shrink-0" />
-                    )}
-                    {msg.uploadStatus === "queued" && (
-                      <span className="text-xs text-wiki-muted shrink-0">
-                        {t("import.queued")}
-                      </span>
-                    )}
-                    {msg.uploadStatus === "ingesting" && (
-                      <span className="flex items-center gap-1 text-xs text-wiki-accent shrink-0">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        {t("import.ingesting")}
-                      </span>
-                    )}
-                    {msg.uploadStatus === "done" && (
-                      <span className="flex items-center gap-1 text-xs text-emerald-400 shrink-0">
-                        <CheckCircle className="w-3 h-3" />
-                        {msg.pagesCreated
-                          ? t("chat.pagesCreated", {
-                              count: msg.pagesCreated,
-                            })
-                          : t("import.done")}
-                      </span>
-                    )}
-                    {msg.uploadStatus === "error" && (
-                      <span
-                        className="flex items-center gap-1 text-xs text-red-400 shrink-0"
-                        title={msg.error}
-                      >
-                        <AlertCircle className="w-3 h-3" />
-                        {t("import.error")}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* System error (query) */}
-              {msg.role === "system" && msg.type === "query" && (
-                <div className="flex justify-start">
-                  <div className="bg-red-950/20 border border-red-800/50 rounded-xl px-4 py-2.5 text-sm text-red-400">
-                    {msg.content}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-
-          {loading && (
-            <div className="flex justify-start">
-              <div className="bg-wiki-surface border border-wiki-border rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-wiki-accent" />
-                <span className="text-sm text-wiki-muted">
-                  {t("query.thinking")}
-                </span>
+    <div className="md:p-4 md:h-screen">
+      <div
+        className="flex flex-col h-[calc(100dvh-5.5rem)] md:h-full md:bg-wiki-surface/30 md:rounded-2xl md:border md:border-wiki-border/40 md:shadow-xl md:shadow-black/10 relative overflow-hidden"
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+      >
+        {/* Drop overlay */}
+        {dragActive && (
+          <div className="absolute inset-0 z-50 bg-wiki-bg/80 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-violet-500/25">
+                <Upload className="w-8 h-8 text-white" />
               </div>
+              <p className="text-wiki-text font-semibold">{t("import.dropHere")}</p>
+              <p className="text-wiki-muted text-sm mt-1">{t("import.dropDesc")}</p>
             </div>
-          )}
+          </div>
+        )}
 
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+            {messages.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 md:py-24 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center mb-5 shadow-lg shadow-violet-500/25">
+                  <ScrollText className="w-8 h-8 text-white" />
+                </div>
+                <h2 className="text-xl font-bold text-wiki-text mb-2">
+                  {t("chat.welcome")}
+                </h2>
+                <p className="text-wiki-muted text-sm max-w-sm mb-8">
+                  {t("chat.welcomeDesc")}
+                </p>
 
-      {/* Input bar */}
-      <div className="shrink-0 border-t border-wiki-border bg-wiki-surface">
-        <div className="max-w-2xl mx-auto px-4 py-3">
-          {/* Memo mode header */}
-          {memoMode && (
-            <div className="flex items-center gap-2 mb-2">
-              <PenLine className="w-4 h-4 text-wiki-accent shrink-0" />
-              <input
-                type="text"
-                value={memoTitle}
-                onChange={(e) => setMemoTitle(e.target.value)}
-                placeholder={t("import.memoTitle")}
-                className="flex-1 bg-transparent text-sm text-wiki-text placeholder-wiki-muted focus:outline-none"
-              />
-              <button
-                onClick={() => {
-                  setMemoMode(false);
-                  setMemoTitle("");
-                }}
-                className="text-wiki-muted hover:text-wiki-text transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-
-          <div className="flex items-end gap-2">
-            {/* Attach button */}
-            <div className="relative shrink-0">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setAttachOpen(!attachOpen);
-                }}
-                className="w-9 h-9 flex items-center justify-center rounded-lg text-wiki-muted hover:text-wiki-text hover:bg-wiki-border/50 transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-              </button>
-
-              {attachOpen && (
-                <div className="absolute bottom-full left-0 mb-2 bg-wiki-surface border border-wiki-border rounded-xl shadow-xl overflow-hidden min-w-[10rem] z-10">
+                {/* Quick action chips */}
+                <div className="flex flex-wrap gap-2 justify-center">
                   <button
-                    onClick={() => {
-                      setAttachOpen(false);
-                      fileInputRef.current?.click();
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-wiki-text hover:bg-wiki-border/50 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-wiki-surface border border-wiki-border/60 text-sm text-wiki-muted hover:text-wiki-text hover:border-wiki-accent/40 hover:shadow-md hover:shadow-violet-500/5 transition-all"
                   >
-                    <FileText className="w-4 h-4 text-wiki-muted" />
+                    <Upload className="w-4 h-4" />
                     {t("chat.uploadFile")}
                   </button>
                   <button
                     onClick={() => {
-                      setAttachOpen(false);
-                      folderInputRef.current?.click();
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-wiki-text hover:bg-wiki-border/50 transition-colors"
-                  >
-                    <FolderOpen className="w-4 h-4 text-wiki-muted" />
-                    {t("chat.uploadFolder")}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setAttachOpen(false);
                       setMemoMode(true);
                       setTimeout(() => textareaRef.current?.focus(), 50);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-wiki-text hover:bg-wiki-border/50 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-wiki-surface border border-wiki-border/60 text-sm text-wiki-muted hover:text-wiki-text hover:border-wiki-accent/40 hover:shadow-md hover:shadow-violet-500/5 transition-all"
                   >
-                    <PenLine className="w-4 h-4 text-wiki-muted" />
+                    <PenLine className="w-4 h-4" />
                     {t("chat.writeMemo")}
                   </button>
+                  <button
+                    onClick={() => textareaRef.current?.focus()}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-wiki-surface border border-wiki-border/60 text-sm text-wiki-muted hover:text-wiki-text hover:border-wiki-accent/40 hover:shadow-md hover:shadow-violet-500/5 transition-all"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    {t("nav.query")}
+                  </button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* Text input */}
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={
-                memoMode
-                  ? t("import.memoPlaceholder")
-                  : t("chat.placeholder")
-              }
-              rows={1}
-              className="flex-1 bg-wiki-bg border border-wiki-border rounded-xl px-4 py-2.5 text-sm text-wiki-text placeholder-wiki-muted focus:outline-none focus:border-wiki-accent transition-colors resize-none max-h-40"
-            />
+            {messages.map((msg) => (
+              <div key={msg.id}>
+                {/* User message */}
+                {msg.role === "user" && (
+                  <div className="flex justify-end">
+                    <div className="bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-500/25 rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]">
+                      <p className="text-sm text-wiki-text whitespace-pre-wrap">
+                        {msg.content}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
-            {/* Send */}
-            <button
-              onClick={handleSend}
-              disabled={!input.trim() || loading}
-              className="w-9 h-9 flex items-center justify-center rounded-lg bg-wiki-accent hover:bg-wiki-accent/80 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-colors shrink-0"
-            >
-              <Send className="w-4 h-4" />
-            </button>
+                {/* Assistant message */}
+                {msg.role === "assistant" && (
+                  <div className="flex justify-start">
+                    <div className="bg-wiki-surface/80 border border-wiki-border/50 rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%] space-y-3">
+                      <WikiRenderer
+                        content={msg.content}
+                        className="text-sm"
+                      />
+
+                      {msg.sources && msg.sources.length > 0 && (
+                        <div className="pt-2 border-t border-wiki-border/40">
+                          <p className="text-xs text-wiki-muted mb-1.5">
+                            {t("query.sources")}
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {msg.sources.map((slug) => (
+                              <a
+                                key={slug}
+                                href={`/wiki/${slug}`}
+                                className="text-xs bg-wiki-bg/80 border border-wiki-border/50 rounded-full px-2.5 py-0.5 text-wiki-link hover:text-wiki-link-hover transition-colors"
+                              >
+                                {slug}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {msg.filedPage && (
+                        <div className="flex items-center gap-1.5 text-emerald-400 text-xs pt-1">
+                          <CheckCircle className="w-3 h-3" />
+                          {t("query.filedAs")}{" "}
+                          <a
+                            href={`/wiki/${msg.filedPage.slug}`}
+                            className="underline hover:text-emerald-300"
+                          >
+                            {msg.filedPage.title}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* System/upload message */}
+                {msg.role === "system" && msg.type === "upload" && (
+                  <div className="flex justify-start">
+                    <div className="bg-wiki-surface/50 border border-wiki-border/40 rounded-xl px-4 py-2.5 max-w-[85%] flex items-center gap-3">
+                      <FileText className="w-4 h-4 text-wiki-muted shrink-0" />
+                      <span className="text-sm text-wiki-text truncate flex-1">
+                        {msg.uploadName}
+                      </span>
+                      {msg.uploadStatus === "uploading" && (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-wiki-muted shrink-0" />
+                      )}
+                      {msg.uploadStatus === "queued" && (
+                        <span className="text-xs text-wiki-muted shrink-0">
+                          {t("import.queued")}
+                        </span>
+                      )}
+                      {msg.uploadStatus === "ingesting" && (
+                        <span className="flex items-center gap-1 text-xs text-wiki-accent shrink-0">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          {t("import.ingesting")}
+                        </span>
+                      )}
+                      {msg.uploadStatus === "done" && (
+                        <span className="flex items-center gap-1 text-xs text-emerald-400 shrink-0">
+                          <CheckCircle className="w-3 h-3" />
+                          {msg.pagesCreated
+                            ? t("chat.pagesCreated", { count: msg.pagesCreated })
+                            : t("import.done")}
+                        </span>
+                      )}
+                      {msg.uploadStatus === "error" && (
+                        <span
+                          className="flex items-center gap-1 text-xs text-red-400 shrink-0"
+                          title={msg.error}
+                        >
+                          <AlertCircle className="w-3 h-3" />
+                          {t("import.error")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* System error (query) */}
+                {msg.role === "system" && msg.type === "query" && (
+                  <div className="flex justify-start">
+                    <div className="bg-red-950/20 border border-red-800/40 rounded-xl px-4 py-2.5 text-sm text-red-400">
+                      {msg.content}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {loading && (
+              <div className="flex justify-start">
+                <div className="bg-wiki-surface/80 border border-wiki-border/50 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-wiki-accent" />
+                  <span className="text-sm text-wiki-muted">
+                    {t("query.thinking")}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
           </div>
         </div>
 
-        {/* Hidden inputs */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          multiple
-          accept=".md,.txt,.pdf,.html"
-          onChange={onFileInput}
-        />
-        <input
-          ref={folderInputRef}
-          type="file"
-          className="hidden"
-          onChange={onFolderInput}
-          {...({ webkitdirectory: "", directory: "" } as React.InputHTMLAttributes<HTMLInputElement>)}
-        />
+        {/* Input bar */}
+        <div className="shrink-0 border-t border-wiki-border/40 bg-wiki-surface/60 backdrop-blur-xl">
+          <div className="max-w-2xl mx-auto px-4 py-3">
+            {/* Memo mode header */}
+            {memoMode && (
+              <div className="flex items-center gap-2 mb-2">
+                <PenLine className="w-4 h-4 text-wiki-accent shrink-0" />
+                <input
+                  type="text"
+                  value={memoTitle}
+                  onChange={(e) => setMemoTitle(e.target.value)}
+                  placeholder={t("import.memoTitle")}
+                  className="flex-1 bg-transparent text-sm text-wiki-text placeholder-wiki-muted focus:outline-none"
+                />
+                <button
+                  onClick={() => {
+                    setMemoMode(false);
+                    setMemoTitle("");
+                  }}
+                  className="text-wiki-muted hover:text-wiki-text transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-end gap-2">
+              {/* Attach button */}
+              <div className="relative shrink-0">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAttachOpen(!attachOpen);
+                  }}
+                  className="w-9 h-9 flex items-center justify-center rounded-xl text-wiki-muted hover:text-wiki-text hover:bg-wiki-border/30 transition-all"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+
+                {attachOpen && (
+                  <div className="absolute bottom-full left-0 mb-2 bg-wiki-surface border border-wiki-border/60 rounded-xl shadow-2xl shadow-black/20 overflow-hidden min-w-[10rem] z-10">
+                    <button
+                      onClick={() => {
+                        setAttachOpen(false);
+                        fileInputRef.current?.click();
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-wiki-text hover:bg-wiki-border/30 transition-colors"
+                    >
+                      <FileText className="w-4 h-4 text-wiki-muted" />
+                      {t("chat.uploadFile")}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAttachOpen(false);
+                        folderInputRef.current?.click();
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-wiki-text hover:bg-wiki-border/30 transition-colors"
+                    >
+                      <FolderOpen className="w-4 h-4 text-wiki-muted" />
+                      {t("chat.uploadFolder")}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAttachOpen(false);
+                        setMemoMode(true);
+                        setTimeout(() => textareaRef.current?.focus(), 50);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-wiki-text hover:bg-wiki-border/30 transition-colors"
+                    >
+                      <PenLine className="w-4 h-4 text-wiki-muted" />
+                      {t("chat.writeMemo")}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Text input */}
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  memoMode
+                    ? t("import.memoPlaceholder")
+                    : t("chat.placeholder")
+                }
+                rows={1}
+                className="flex-1 bg-wiki-bg/60 border border-wiki-border/40 rounded-xl px-4 py-2.5 text-sm text-wiki-text placeholder-wiki-muted focus:outline-none focus:border-wiki-accent/50 transition-all resize-none max-h-40"
+              />
+
+              {/* Send */}
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || loading}
+                className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-400 hover:to-fuchsia-400 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-all shadow-md shadow-violet-500/20 disabled:shadow-none shrink-0"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Hidden inputs */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            multiple
+            accept=".md,.txt,.pdf,.html"
+            onChange={onFileInput}
+          />
+          <input
+            ref={folderInputRef}
+            type="file"
+            className="hidden"
+            onChange={onFolderInput}
+            {...({ webkitdirectory: "", directory: "" } as React.InputHTMLAttributes<HTMLInputElement>)}
+          />
+        </div>
       </div>
     </div>
   );

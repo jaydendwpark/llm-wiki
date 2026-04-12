@@ -3,19 +3,19 @@
 
 @theme {
   --font-sans: var(--font-inter), system-ui, sans-serif;
-  --color-wiki-bg: #0f1117;
-  --color-wiki-surface: #1a1d2e;
-  --color-wiki-border: #2a2d3e;
-  --color-wiki-text: #e2e8f0;
-  --color-wiki-muted: #64748b;
-  --color-wiki-accent: #7c3aed;
-  --color-wiki-link: #818cf8;
-  --color-wiki-link-hover: #a5b4fc;
+  --color-wiki-bg: #110f1b;
+  --color-wiki-surface: #1c1929;
+  --color-wiki-border: #2e2945;
+  --color-wiki-text: #eeedf5;
+  --color-wiki-muted: #8f88a5;
+  --color-wiki-accent: #a78bfa;
+  --color-wiki-link: #c4b5fd;
+  --color-wiki-link-hover: #ddd6fe;
 }
 
 :root {
-  --background: #0f1117;
-  --foreground: #e2e8f0;
+  --background: #110f1b;
+  --foreground: #eeedf5;
 }
 
 body {
@@ -27,36 +27,40 @@ body {
 
 /* Wiki link styling */
 .wiki-link {
-  color: #818cf8;
+  color: #c4b5fd;
   border-bottom: 1px solid transparent;
   transition: border-color 0.15s ease;
 }
 .wiki-link:hover {
-  border-bottom-color: #818cf8;
-  color: #a5b4fc;
+  border-bottom-color: #c4b5fd;
+  color: #ddd6fe;
 }
 
 /* Prose dark mode overrides */
 .prose {
-  --tw-prose-body: #e2e8f0;
-  --tw-prose-headings: #f1f5f9;
-  --tw-prose-links: #818cf8;
-  --tw-prose-bold: #f1f5f9;
-  --tw-prose-counters: #64748b;
-  --tw-prose-bullets: #64748b;
-  --tw-prose-hr: #2a2d3e;
-  --tw-prose-quotes: #94a3b8;
-  --tw-prose-quote-borders: #7c3aed;
-  --tw-prose-captions: #64748b;
-  --tw-prose-code: #a78bfa;
-  --tw-prose-pre-code: #e2e8f0;
-  --tw-prose-pre-bg: #1e1b4b;
-  --tw-prose-th-borders: #2a2d3e;
-  --tw-prose-td-borders: #2a2d3e;
+  --tw-prose-body: #eeedf5;
+  --tw-prose-headings: #f5f3ff;
+  --tw-prose-links: #c4b5fd;
+  --tw-prose-bold: #f5f3ff;
+  --tw-prose-counters: #8f88a5;
+  --tw-prose-bullets: #8f88a5;
+  --tw-prose-hr: #2e2945;
+  --tw-prose-quotes: #a5a0b8;
+  --tw-prose-quote-borders: #a78bfa;
+  --tw-prose-captions: #8f88a5;
+  --tw-prose-code: #c4b5fd;
+  --tw-prose-pre-code: #eeedf5;
+  --tw-prose-pre-bg: #1a1630;
+  --tw-prose-th-borders: #2e2945;
+  --tw-prose-td-borders: #2e2945;
 }
 
-/* Custom scrollbar */
+/* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2a2d3e; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #3a3d5e; }
+::-webkit-scrollbar-thumb { background: #2e2945; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3d3660; }
+
+/* Hide scrollbar utility */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
