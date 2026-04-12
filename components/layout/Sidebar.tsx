@@ -100,6 +100,11 @@ export function Sidebar() {
 
   const pct = usage ? Math.min(100, (usage.spentUsd / usage.limitUsd) * 100) : 0;
 
+  const themeLogoBadge: Record<string, { emoji: string; gradient: string }> = {
+    dog: { emoji: "\uD83D\uDC36", gradient: "from-amber-400 to-orange-400" },
+    cat: { emoji: "\uD83D\uDC31", gradient: "from-indigo-400 to-violet-400" },
+  };
+
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
     if (href === "/wiki") return pathname === "/wiki" || (pathname.startsWith("/wiki/") && !pathname.startsWith("/wiki/graph"));
@@ -133,8 +138,12 @@ export function Sidebar() {
       <div className="fixed top-0 left-0 right-0 z-40 md:hidden">
         <div className="flex items-center justify-between px-4 h-12 bg-wiki-surface/80 backdrop-blur-xl border-b border-wiki-border/40">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
-              <ScrollText className="w-4 h-4 text-white" />
+            <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${themeLogoBadge[theme]?.gradient ?? "from-violet-500 to-fuchsia-500"} flex items-center justify-center`}>
+              {themeLogoBadge[theme] ? (
+                <span className="text-sm">{themeLogoBadge[theme].emoji}</span>
+              ) : (
+                <ScrollText className="w-4 h-4 text-white" />
+              )}
             </div>
             <span className="font-bold text-wiki-text tracking-tight">Mnemo</span>
           </Link>
@@ -170,20 +179,25 @@ export function Sidebar() {
         </div>
 
         <div className="flex gap-1.5 px-3 py-2 bg-wiki-bg/80 backdrop-blur-xl border-b border-wiki-border/30 overflow-x-auto scrollbar-hide">
-          {NAV.map(({ href, icon: Icon, label }) => (
+          {NAV.map(({ href, icon: Icon, label }) => {
+            const activeGradient = themeLogoBadge[theme]
+              ? `bg-gradient-to-r ${themeLogoBadge[theme].gradient} text-white shadow-md`
+              : "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-md shadow-violet-500/20";
+            return (
             <Link
               key={href}
               href={href}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shrink-0 transition-all ${
                 isActive(href)
-                  ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-md shadow-violet-500/20"
+                  ? activeGradient
                   : "text-wiki-muted hover:text-wiki-text hover:bg-wiki-surface/80"
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
               {label}
             </Link>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -191,8 +205,12 @@ export function Sidebar() {
       <aside className="hidden md:flex w-56 min-h-screen bg-wiki-surface/90 backdrop-blur-xl border-r border-wiki-border/40 flex-col shrink-0">
         <div className="p-5 border-b border-wiki-border/40">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/20">
-              <ScrollText className="w-4.5 h-4.5 text-white" />
+            <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${themeLogoBadge[theme]?.gradient ?? "from-violet-500 to-fuchsia-500"} flex items-center justify-center shadow-lg shadow-violet-500/20`}>
+              {themeLogoBadge[theme] ? (
+                <span className="text-base">{themeLogoBadge[theme].emoji}</span>
+              ) : (
+                <ScrollText className="w-4.5 h-4.5 text-white" />
+              )}
             </div>
             <div>
               <span className="font-bold text-wiki-text tracking-tight">Mnemo</span>

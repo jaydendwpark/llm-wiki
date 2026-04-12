@@ -16,6 +16,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { useLocale } from "@/lib/i18n/context";
+import { useTheme } from "@/lib/theme/context";
 import { WikiRenderer } from "@/components/wiki/WikiRenderer";
 
 /* ── Types ──────────────────────────────────────────────────────── */
@@ -61,8 +62,14 @@ async function getFilesFromEntry(entry: FileSystemEntry): Promise<File[]> {
 
 /* ── Component ───────────────────────────────────────────────────── */
 
+const THEME_HERO: Record<string, { emoji: string; gradient: string; shadow: string }> = {
+  dog: { emoji: "\uD83D\uDC36", gradient: "from-amber-400 to-orange-400", shadow: "shadow-amber-500/25" },
+  cat: { emoji: "\uD83D\uDC31", gradient: "from-indigo-400 to-violet-400", shadow: "shadow-indigo-500/25" },
+};
+
 export function ChatView() {
   const { t } = useLocale();
+  const { theme } = useTheme();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -378,9 +385,15 @@ export function ChatView() {
         {dragActive && (
           <div className="absolute inset-0 z-50 bg-wiki-bg/80 backdrop-blur-sm flex items-center justify-center pointer-events-none">
             <div className="text-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-violet-500/25">
-                <Upload className="w-8 h-8 text-white" />
-              </div>
+              {THEME_HERO[theme] ? (
+                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${THEME_HERO[theme].gradient} flex items-center justify-center mx-auto mb-4 shadow-lg ${THEME_HERO[theme].shadow}`}>
+                  <span className="text-3xl">{THEME_HERO[theme].emoji}</span>
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-violet-500/25">
+                  <Upload className="w-8 h-8 text-white" />
+                </div>
+              )}
               <p className="text-wiki-text font-semibold">{t("import.dropHere")}</p>
               <p className="text-wiki-muted text-sm mt-1">{t("import.dropDesc")}</p>
             </div>
@@ -392,9 +405,15 @@ export function ChatView() {
           <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 md:py-24 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center mb-5 shadow-lg shadow-violet-500/25">
-                  <ScrollText className="w-8 h-8 text-white" />
-                </div>
+                {THEME_HERO[theme] ? (
+                  <div className={`w-24 h-24 rounded-3xl bg-gradient-to-br ${THEME_HERO[theme].gradient} flex items-center justify-center mb-5 shadow-lg ${THEME_HERO[theme].shadow}`}>
+                    <span className="text-5xl">{THEME_HERO[theme].emoji}</span>
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center mb-5 shadow-lg shadow-violet-500/25">
+                    <ScrollText className="w-8 h-8 text-white" />
+                  </div>
+                )}
                 <h2 className="text-xl font-bold text-wiki-text mb-2">
                   {t("chat.welcome")}
                 </h2>
