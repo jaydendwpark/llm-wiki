@@ -3,6 +3,8 @@ import { runIngest } from "@/lib/agents/ingest";
 import { validateApiRequest } from "@/lib/utils/api-auth";
 import { z } from "zod";
 
+export const maxDuration = 300;
+
 const schema = z.object({ sourceId: z.string().uuid() });
 
 export async function POST(request: NextRequest) {

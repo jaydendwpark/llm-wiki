@@ -10,7 +10,7 @@ export default async function WikiIndexPage() {
   const supabase = await createClient();
   const { data: pages } = await supabase
     .from("wiki_pages")
-    .select("slug, title, summary, tags, updated_at, source_count")
+    .select("slug, title, summary, tags, updated_at")
     .order("updated_at", { ascending: false });
 
   const grouped = new Map<string, typeof pages>();

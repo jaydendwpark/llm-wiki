@@ -3,6 +3,8 @@ import { runQuery } from "@/lib/agents/query";
 import { validateApiRequest } from "@/lib/utils/api-auth";
 import { z } from "zod";
 
+export const maxDuration = 120;
+
 const schema = z.object({ question: z.string().min(1).max(2000) });
 
 export async function POST(request: NextRequest) {

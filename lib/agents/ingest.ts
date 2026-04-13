@@ -104,6 +104,7 @@ async function llmAnalyze(state: typeof IngestState.State) {
 async function persistPages(state: typeof IngestState.State) {
   if (state.error || !state.llmResult) return {};
   const supabase = createServiceClient();
+  const errors: string[] = [];
 
   const allPages = [state.llmResult.summaryPage, ...state.llmResult.updatedPages];
 
@@ -122,6 +123,8 @@ async function persistPages(state: typeof IngestState.State) {
       );
     if (upsertErr) {
       console.error(`[ingest] upsert wiki_pages failed for ${page.slug}:`, upsertErr.message);
+      errors.push(`upsert ${page.slug}: ${upsertErr.message}`);
+      continue;
     }
 
     const { error: delErr } = await supabase.from("wiki_links").delete().eq("from_slug", page.slug);
@@ -133,6 +136,10 @@ async function persistPages(state: typeof IngestState.State) {
       );
       if (linkErr) console.error(`[ingest] insert wiki_links failed:`, linkErr.message);
     }
+  }
+
+  if (errors.length > 0 && errors.length === allPages.length) {
+    return { error: `All page upserts failed: ${errors.join("; ")}` };
   }
 
   const { error: markErr } = await supabase
