@@ -11,7 +11,7 @@ import {
   Wrench,
   Download,
   LogOut,
-  Sparkles,
+  Upload,
   Globe,
   ScrollText,
   MessageCircle,
@@ -48,7 +48,7 @@ export function Sidebar() {
   const NAV = [
     { href: "/",           icon: MessageCircle, label: t("nav.chat") },
     { href: "/wiki",       icon: BookOpen,      label: t("nav.wiki") },
-    { href: "/raw",        icon: Sparkles,      label: t("nav.import") },
+    { href: "/raw",        icon: Upload,        label: t("nav.import") },
     { href: "/wiki/graph", icon: Network,       label: t("nav.graph") },
     { href: "/query",      icon: Activity,      label: t("nav.query") },
     { href: "/lint",       icon: Wrench,        label: t("nav.lint") },

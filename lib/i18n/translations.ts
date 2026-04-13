@@ -6,7 +6,7 @@ const translations = {
   "nav.wiki": { en: "Wiki", ko: "위키" },
   "nav.graph": { en: "Graph View", ko: "그래프 뷰" },
   "nav.query": { en: "Query", ko: "질문하기" },
-  "nav.import": { en: "Build Wiki", ko: "위키 만들기" },
+  "nav.import": { en: "Uploads", ko: "업로드 기록" },
   "nav.lint": { en: "Lint", ko: "Lint" },
   "sidebar.search": { en: "Search\u2026", ko: "검색\u2026" },
   "sidebar.budget": { en: "AI Budget", ko: "AI 사용량" },
@@ -22,8 +22,8 @@ const translations = {
   "wiki.graphView": { en: "Graph View", ko: "그래프 뷰" },
   "wiki.empty": { en: "Wiki is empty", ko: "위키가 비어 있습니다" },
   "wiki.emptyDesc": {
-    en: "Upload sources in Build Wiki to get started",
-    ko: "위키 만들기에서 자료를 업로드하세요",
+    en: "Upload files in Chat to get started",
+    ko: "채팅에서 파일을 업로드하세요",
   },
   "wiki.addSource": { en: "Add Source", ko: "자료 추가" },
 
@@ -80,13 +80,18 @@ const translations = {
   "query.sources": { en: "Sources", ko: "출처" },
   "query.filedAs": { en: "Filed as", ko: "저장됨:" },
 
-  // Import (was Raw Sources)
-  "import.title": { en: "Build Wiki", ko: "위키 만들기" },
+  // Upload history
+  "import.title": { en: "Upload History", ko: "업로드 기록" },
   "import.desc": {
-    en: "Upload documents to generate wiki pages. The AI reads them and builds interconnected knowledge.",
-    ko: "문서를 업로드하면 위키 페이지가 생성됩니다. AI가 자료를 읽고 연결된 지식을 만듭니다.",
+    en: "All documents uploaded to your wiki. Upload new files via Chat.",
+    ko: "위키에 업로드된 모든 문서입니다. 새 파일은 채팅에서 업로드하세요.",
   },
-  "import.sourceHistory": { en: "Source history", ko: "업로드 기록" },
+  "import.empty": { en: "No uploads yet", ko: "업로드 기록이 없습니다" },
+  "import.emptyDesc": {
+    en: "Drop files in Chat to build your wiki",
+    ko: "채팅에서 파일을 드롭하여 위키를 만드세요",
+  },
+  "import.goChat": { en: "Go to Chat", ko: "채팅으로 이동" },
   "import.ingested": { en: "Ingested", ko: "처리됨" },
   "import.pending": { en: "Pending", ko: "대기 중" },
   "import.dropHere": {
