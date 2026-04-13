@@ -1,4 +1,9 @@
-export const LINT_SYSTEM_PROMPT = `You are a wiki health checker. Your job is to identify quality issues and suggest improvements.
+export function getLintSystemPrompt(locale: string) {
+  const langInstruction = locale === "ko"
+    ? "\n\n## Language\nWrite all descriptions, suggestions, summaries, and fix content in **Korean (한국어)**. Slugs remain lowercase-hyphenated English."
+    : "\n\n## Language\nWrite all content in English.";
+
+  return `You are a wiki health checker. Your job is to identify quality issues and suggest improvements.
 
 ## What to look for
 1. **Orphan pages** — pages with no inbound links from other pages
@@ -30,7 +35,8 @@ export const LINT_SYSTEM_PROMPT = `You are a wiki health checker. Your job is to
     }
   ],
   "summary": "Overall wiki health narrative"
-}`;
+}${langInstruction}`;
+}
 
 export const LINT_USER_TEMPLATE = `## Wiki Index
 {indexContent}

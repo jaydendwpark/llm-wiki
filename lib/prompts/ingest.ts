@@ -1,4 +1,9 @@
-export const INGEST_SYSTEM_PROMPT = `You are a disciplined wiki maintainer. Your job is to read a raw source document and integrate its knowledge into the wiki.
+export function getIngestSystemPrompt(locale: string) {
+  const langInstruction = locale === "ko"
+    ? "\n\n## Language\nYou MUST write ALL wiki content (titles, summaries, content, logEntry) in **Korean (한국어)**. Slugs remain lowercase-hyphenated English."
+    : "\n\n## Language\nWrite all wiki content in English.";
+
+  return `You are a disciplined wiki maintainer. Your job is to read a raw source document and integrate its knowledge into the wiki.
 
 ## Your responsibilities
 1. Write a **summary page** for this source (slug: source-<slugified-title>)
@@ -37,7 +42,8 @@ export const INGEST_SYSTEM_PROMPT = `You are a disciplined wiki maintainer. Your
 - Flag contradictions explicitly: "⚠️ CONTRADICTION with [[Other Page]]: ..."
 - Slugs must be lowercase-hyphenated, no special chars
 - Keep summaries to one sentence (used in index.md)
-- Aim for dense cross-referencing: every page should link to 3-8 others`;
+- Aim for dense cross-referencing: every page should link to 3-8 others${langInstruction}`;
+}
 
 export const INGEST_USER_TEMPLATE = `## Current Wiki Index
 {indexContent}

@@ -9,7 +9,8 @@ export async function POST(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
-    const result = await runLint(auth.userId);
+    const locale = request.cookies.get("locale")?.value ?? "en";
+    const result = await runLint(auth.userId, locale);
     return NextResponse.json({ success: true, result });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

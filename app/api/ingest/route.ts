@@ -14,7 +14,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { sourceId } = schema.parse(body);
-    const result = await runIngest(sourceId, auth.userId);
+    const locale = request.cookies.get("locale")?.value ?? "en";
+    const result = await runIngest(sourceId, auth.userId, locale);
     return NextResponse.json({ success: true, result });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

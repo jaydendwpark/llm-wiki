@@ -9,7 +9,7 @@
 
 import { StateGraph, Annotation, END } from "@langchain/langgraph";
 import { createServiceClient } from "@/lib/supabase/server";
-import { QUERY_SYSTEM_PROMPT, QUERY_USER_TEMPLATE } from "@/lib/prompts/query";
+import { getQuerySystemPrompt, QUERY_USER_TEMPLATE } from "@/lib/prompts/query";
 import { extractOutboundLinks } from "@/lib/wiki/parser";
 import { parseLLMJson, QueryResultSchema } from "@/lib/utils/parse-llm-json";
 import { callLLM, LLMUsage } from "@/lib/agents/llm";
@@ -21,6 +21,7 @@ type QueryResult = z.infer<typeof QueryResultSchema>;
 const QueryState = Annotation.Root({
   question:      Annotation<string>(),
   userId:        Annotation<string>(),
+  locale:        Annotation<string>(),
   indexContent:  Annotation<string>(),
   relevantSlugs: Annotation<string[]>(),
   pagesContent:  Annotation<string>(),
@@ -84,7 +85,7 @@ async function llmAnswer(state: typeof QueryState.State) {
     .replace("{question}", state.question);
 
   const { text, usage } = await callLLM({
-    system: QUERY_SYSTEM_PROMPT,
+    system: getQuerySystemPrompt(state.locale),
     user: userMessage,
   });
 
@@ -162,9 +163,9 @@ const graph = new StateGraph(QueryState)
 
 export const queryGraph = graph.compile();
 
-export async function runQuery(question: string, userId: string) {
+export async function runQuery(question: string, userId: string, locale = "en") {
   const result = await queryGraph.invoke({
-    question, userId,
+    question, userId, locale,
     indexContent: "", relevantSlugs: [], pagesContent: "",
     llmResult: null, llmUsage: null, error: null,
   });

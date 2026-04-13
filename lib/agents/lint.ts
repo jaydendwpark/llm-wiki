@@ -9,7 +9,7 @@
 
 import { StateGraph, Annotation, END } from "@langchain/langgraph";
 import { createServiceClient } from "@/lib/supabase/server";
-import { LINT_SYSTEM_PROMPT, LINT_USER_TEMPLATE } from "@/lib/prompts/lint";
+import { getLintSystemPrompt, LINT_USER_TEMPLATE } from "@/lib/prompts/lint";
 import { buildGraphData, findOrphans } from "@/lib/wiki/graph";
 import { extractOutboundLinks } from "@/lib/wiki/parser";
 import { parseLLMJson, LintResultSchema } from "@/lib/utils/parse-llm-json";
@@ -37,6 +37,7 @@ const LintState = Annotation.Root({
   allPages:     Annotation<PageData[]>(),
   allLinks:     Annotation<LinkData[]>(),
   userId:       Annotation<string>(),
+  locale:       Annotation<string>(),
   indexContent: Annotation<string>(),
   orphanSlugs:  Annotation<string[]>(),
   brokenLinks:  Annotation<string[]>(),
@@ -94,7 +95,7 @@ async function llmLint(state: typeof LintState.State) {
     .replace("{brokenLinks}", state.brokenLinks.join(", ") || "none");
 
   const { text, usage } = await callLLM({
-    system: LINT_SYSTEM_PROMPT,
+    system: getLintSystemPrompt(state.locale),
     user: userMessage,
   });
 
@@ -169,9 +170,9 @@ const graph = new StateGraph(LintState)
 
 export const lintGraph = graph.compile();
 
-export async function runLint(userId: string) {
+export async function runLint(userId: string, locale = "en") {
   const result = await lintGraph.invoke({
-    allPages: [], allLinks: [], userId,
+    allPages: [], allLinks: [], userId, locale,
     indexContent: "", orphanSlugs: [], brokenLinks: [],
     llmResult: null, llmUsage: null, error: null,
   });

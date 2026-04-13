@@ -9,7 +9,7 @@
 
 import { StateGraph, Annotation, END } from "@langchain/langgraph";
 import { createServiceClient } from "@/lib/supabase/server";
-import { INGEST_SYSTEM_PROMPT, INGEST_USER_TEMPLATE } from "@/lib/prompts/ingest";
+import { getIngestSystemPrompt, INGEST_USER_TEMPLATE } from "@/lib/prompts/ingest";
 import { extractOutboundLinks } from "@/lib/wiki/parser";
 import { parseLLMJson, IngestResultSchema } from "@/lib/utils/parse-llm-json";
 import { callLLM, LLMUsage } from "@/lib/agents/llm";
@@ -21,6 +21,7 @@ type IngestResult = z.infer<typeof IngestResultSchema>;
 const IngestState = Annotation.Root({
   sourceId:      Annotation<string>(),
   userId:        Annotation<string>(),
+  locale:        Annotation<string>(),
   filename:      Annotation<string>(),
   sourceContent: Annotation<string>(),
   indexContent:  Annotation<string>(),
@@ -89,7 +90,7 @@ async function llmAnalyze(state: typeof IngestState.State) {
     .replace("{sourceContent}", state.sourceContent.slice(0, 800_000)); // ~200K tokens (800K chars)
 
   const { text, usage } = await callLLM({
-    system: INGEST_SYSTEM_PROMPT,
+    system: getIngestSystemPrompt(state.locale),
     user: userMessage,
   });
 
@@ -190,9 +191,9 @@ const graph = new StateGraph(IngestState)
 
 export const ingestGraph = graph.compile();
 
-export async function runIngest(sourceId: string, userId: string) {
+export async function runIngest(sourceId: string, userId: string, locale = "en") {
   const result = await ingestGraph.invoke({
-    sourceId, userId,
+    sourceId, userId, locale,
     filename: "", sourceContent: "", indexContent: "",
     llmResult: null, llmUsage: null, error: null,
   });

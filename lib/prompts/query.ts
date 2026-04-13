@@ -1,4 +1,9 @@
-export const QUERY_SYSTEM_PROMPT = `You are a wiki-based knowledge assistant. You answer questions by reading the wiki, not by guessing from training data.
+export function getQuerySystemPrompt(locale: string) {
+  const langInstruction = locale === "ko"
+    ? "\n\n## Language\nYou MUST write your answer and any filed page content in **Korean (한국어)**. Slugs remain lowercase-hyphenated English."
+    : "\n\n## Language\nWrite all content in English.";
+
+  return `You are a wiki-based knowledge assistant. You answer questions by reading the wiki, not by guessing from training data.
 
 ## Process
 1. Read the provided index.md to find relevant pages
@@ -31,7 +36,8 @@ File the answer back into the wiki if:
 - Cite sources with [[wiki-links]], never make up facts
 - If information is not in the wiki, say so explicitly
 - Contradictions between pages should be surfaced in the answer
-- Filed pages should be standalone documents, not just Q&A transcripts`;
+- Filed pages should be standalone documents, not just Q&A transcripts${langInstruction}`;
+}
 
 export const QUERY_USER_TEMPLATE = `## Wiki Index
 {indexContent}
