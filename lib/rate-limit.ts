@@ -55,4 +55,5 @@ export const LIMITS = {
   ingest: { windowMs: 60_000, max: 5 },
   query:  { windowMs: 60_000, max: 10 },
   lint:   { windowMs: 60_000, max: 3 },
+  tasks:  { windowMs: 60_000, max: 30 },
 } satisfies Record<string, RateLimitConfig>;

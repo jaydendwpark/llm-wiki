@@ -1,7 +1,7 @@
 # LLM Wiki — Agent Schema v2
 
 > 안드레 카파시 LLM Wiki 패턴 기반 (gist: 442a6bf555914893e9891c11519de94f)
-> GitHub: jaydendwpark/llm-wiki
+> GitHub: jaydendwpark/mnemo
 
 이 파일은 LLM 에이전트가 위키를 유지보수할 때 따라야 하는 규칙을 정의합니다.
 

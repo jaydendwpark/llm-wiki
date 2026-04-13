@@ -2,16 +2,51 @@ export type Locale = "en" | "ko";
 
 const translations = {
   // Sidebar nav
-  "nav.chat": { en: "Chat", ko: "채팅" },
+  "nav.home": { en: "Home", ko: "홈" },
   "nav.wiki": { en: "Wiki", ko: "위키" },
   "nav.graph": { en: "Graph View", ko: "그래프 뷰" },
-  "nav.query": { en: "Query", ko: "질문하기" },
   "nav.import": { en: "Uploads", ko: "업로드 기록" },
+  "nav.tasks": { en: "Tasks", ko: "할 일" },
   "nav.lint": { en: "Lint", ko: "Lint" },
   "sidebar.search": { en: "Search\u2026", ko: "검색\u2026" },
   "sidebar.budget": { en: "AI Budget", ko: "AI 사용량" },
   "sidebar.export": { en: "Export", ko: "내보내기" },
   "sidebar.signout": { en: "Sign out", ko: "로그아웃" },
+
+  // Home
+  "home.welcome": { en: "Welcome to Mnemo", ko: "Mnemo에 오신 것을 환영합니다" },
+  "home.welcomeDesc": {
+    en: "Ask questions, register knowledge, or create tasks.",
+    ko: "질문하거나, 지식을 등록하거나, 할 일을 만드세요.",
+  },
+  "home.placeholder": {
+    en: "Type a question, memo, URL, or task\u2026",
+    ko: "질문, 메모, URL, 할 일을 입력하세요\u2026",
+  },
+  "home.queryBtn": { en: "Query", ko: "질문" },
+  "home.registerBtn": { en: "Register", ko: "등록" },
+  "home.dateOption": { en: "Date", ko: "날짜" },
+  "home.taskOption": { en: "Task", ko: "할 일" },
+  "home.attach": { en: "Attach", ko: "첨부" },
+  "home.attachFile": { en: "File", ko: "파일" },
+  "home.attachFolder": { en: "Folder", ko: "폴더" },
+  "home.attachImage": { en: "Image", ko: "이미지" },
+  "home.dropFiles": {
+    en: "Drop files here",
+    ko: "파일을 여기에 드롭하세요",
+  },
+  "home.dropDesc": {
+    en: "PDF, Markdown, Text, HTML",
+    ko: "PDF, 마크다운, 텍스트, HTML",
+  },
+  "home.taskCreated": { en: "Task created", ko: "할 일이 만들어졌습니다" },
+  "home.pagesCreated": {
+    en: "{count} pages created",
+    ko: "{count}개 페이지 생성",
+  },
+  "home.uploading": { en: "Uploading\u2026", ko: "업로드 중\u2026" },
+  "home.ingesting": { en: "Building wiki pages\u2026", ko: "위키 페이지 생성 중\u2026" },
+  "home.registered": { en: "Registered", ko: "등록 완료" },
 
   // Wiki index
   "wiki.title": { en: "Wiki", ko: "위키" },
@@ -22,8 +57,8 @@ const translations = {
   "wiki.graphView": { en: "Graph View", ko: "그래프 뷰" },
   "wiki.empty": { en: "Wiki is empty", ko: "위키가 비어 있습니다" },
   "wiki.emptyDesc": {
-    en: "Upload files in Chat to get started",
-    ko: "채팅에서 파일을 업로드하세요",
+    en: "Upload files from Home to get started",
+    ko: "홈에서 파일을 업로드하세요",
   },
   "wiki.addSource": { en: "Add Source", ko: "자료 추가" },
 
@@ -64,73 +99,25 @@ const translations = {
     ko: "{pages}개 페이지 \u00b7 {links}개 연결",
   },
 
-  // Query
-  "query.title": { en: "Query", ko: "질문하기" },
-  "query.desc": {
-    en: "Ask questions against your wiki. Great answers are automatically filed back as new pages.",
-    ko: "위키에 질문하세요. 좋은 답변은 자동으로 새 페이지로 저장됩니다.",
-  },
-  "query.recent": { en: "Recent queries", ko: "최근 질문" },
-  "query.placeholder": {
-    en: "Ask anything about your wiki\u2026",
-    ko: "위키에 대해 무엇이든 물어보세요\u2026",
-  },
+  // Query (still used by output rendering)
   "query.thinking": { en: "Thinking\u2026", ko: "생각 중\u2026" },
-  "query.ask": { en: "Ask", ko: "질문" },
   "query.sources": { en: "Sources", ko: "출처" },
   "query.filedAs": { en: "Filed as", ko: "저장됨:" },
 
   // Upload history
   "import.title": { en: "Upload History", ko: "업로드 기록" },
   "import.desc": {
-    en: "All documents uploaded to your wiki. Upload new files via Chat.",
-    ko: "위키에 업로드된 모든 문서입니다. 새 파일은 채팅에서 업로드하세요.",
+    en: "All documents uploaded to your wiki. Upload new files from Home.",
+    ko: "위키에 업로드된 모든 문서입니다. 새 파일은 홈에서 업로드하세요.",
   },
   "import.empty": { en: "No uploads yet", ko: "업로드 기록이 없습니다" },
   "import.emptyDesc": {
-    en: "Drop files in Chat to build your wiki",
-    ko: "채팅에서 파일을 드롭하여 위키를 만드세요",
+    en: "Drop files on Home to build your wiki",
+    ko: "홈에서 파일을 드롭하여 위키를 만드세요",
   },
-  "import.goChat": { en: "Go to Chat", ko: "채팅으로 이동" },
+  "import.goHome": { en: "Go to Home", ko: "홈으로 이동" },
   "import.ingested": { en: "Ingested", ko: "처리됨" },
   "import.pending": { en: "Pending", ko: "대기 중" },
-  "import.dropHere": {
-    en: "Drop sources here or click to browse",
-    ko: "파일을 끌어다 놓거나 클릭하여 선택하세요",
-  },
-  "import.dropDesc": {
-    en: "Markdown, text, PDF, HTML \u2014 anything you want the wiki to learn from",
-    ko: "마크다운, 텍스트, PDF, HTML \u2014 위키가 학습할 모든 자료",
-  },
-  "import.uploading": { en: "Uploading\u2026", ko: "업로드 중\u2026" },
-  "import.ingesting": {
-    en: "Building wiki pages\u2026",
-    ko: "위키 페이지 생성 중\u2026",
-  },
-  "import.done": { en: "Done", ko: "완료" },
-  "import.error": { en: "Error", ko: "오류" },
-  "import.uploadFolder": { en: "Upload folder", ko: "폴더 업로드" },
-  "import.tabFile": { en: "File", ko: "파일" },
-  "import.tabMemo": { en: "Memo", ko: "메모" },
-  "import.tabUrl": { en: "Link", ko: "링크" },
-  "import.memoTitle": {
-    en: "Title (optional)",
-    ko: "제목 (선택)",
-  },
-  "import.memoPlaceholder": {
-    en: "Write your thoughts, notes, ideas\u2026",
-    ko: "생각, 노트, 아이디어를 작성하세요\u2026",
-  },
-  "import.memoSubmit": { en: "Add to Wiki", ko: "위키에 추가" },
-  "import.urlPlaceholder": {
-    en: "https://\u2026",
-    ko: "https://\u2026",
-  },
-  "import.urlFetch": { en: "Fetch & Build", ko: "가져와서 만들기" },
-  "import.urlFetching": {
-    en: "Fetching page\u2026",
-    ko: "페이지 가져오는 중\u2026",
-  },
   "import.queued": { en: "Queued", ko: "대기 중" },
 
   // Lint
@@ -163,23 +150,23 @@ const translations = {
   "search.open": { en: "open", ko: "열기" },
   "search.close": { en: "close", ko: "닫기" },
 
-  // Chat
-  "chat.welcome": { en: "Welcome to Mnemo", ko: "Mnemo에 오신 것을 환영합니다" },
-  "chat.welcomeDesc": {
-    en: "Ask questions about your wiki, upload documents, or write memos. Paste a URL to import from the web.",
-    ko: "위키에 질문하거나, 문서를 업로드하거나, 메모를 작성하세요. URL을 붙여넣으면 웹에서 가져옵니다.",
+  // Tasks
+  "tasks.title": { en: "Tasks", ko: "할 일" },
+  "tasks.desc": {
+    en: "Your personal task list. Create tasks from Home.",
+    ko: "개인 할 일 목록입니다. 홈에서 할 일을 만드세요.",
   },
-  "chat.placeholder": {
-    en: "Ask anything, paste a URL, or drop files\u2026",
-    ko: "질문하거나 URL을 붙여넣거나 파일을 드롭하세요\u2026",
+  "tasks.empty": { en: "No tasks yet", ko: "할 일이 없습니다" },
+  "tasks.emptyDesc": {
+    en: "Create a task from Home",
+    ko: "홈에서 할 일을 만드세요",
   },
-  "chat.uploadFile": { en: "Upload file", ko: "파일 업로드" },
-  "chat.uploadFolder": { en: "Upload folder", ko: "폴더 업로드" },
-  "chat.writeMemo": { en: "Write memo", ko: "메모 작성" },
-  "chat.pagesCreated": {
-    en: "{count} pages created",
-    ko: "{count}개 페이지 생성",
-  },
+  "tasks.goHome": { en: "Go to Home", ko: "홈으로 이동" },
+  "tasks.todo": { en: "To Do", ko: "할 일" },
+  "tasks.inProgress": { en: "In Progress", ko: "진행 중" },
+  "tasks.done": { en: "Done", ko: "완료" },
+  "tasks.cancelled": { en: "Cancelled", ko: "취소됨" },
+  "tasks.dueDate": { en: "Due", ko: "기한" },
 
   // Theme
   "theme.title": { en: "Theme", ko: "테마" },

@@ -30,7 +30,7 @@ export default async function UploadHistoryPage() {
             href="/"
             className="inline-flex items-center gap-2 bg-wiki-accent hover:bg-wiki-accent/80 text-white px-5 py-2.5 rounded-lg text-sm transition-colors"
           >
-            {t("import.goChat")}
+            {t("import.goHome")}
           </Link>
         </div>
       ) : (

@@ -7,14 +7,14 @@ import {
   BookOpen,
   Search,
   Network,
-  Activity,
   Wrench,
   Download,
   LogOut,
   Upload,
   Globe,
   ScrollText,
-  MessageCircle,
+  PenSquare,
+  CheckSquare,
   MoreHorizontal,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -46,12 +46,12 @@ export function Sidebar() {
   const [moreOpen, setMoreOpen] = useState(false);
 
   const NAV = [
-    { href: "/",           icon: MessageCircle, label: t("nav.chat") },
-    { href: "/wiki",       icon: BookOpen,      label: t("nav.wiki") },
-    { href: "/raw",        icon: Upload,        label: t("nav.import") },
-    { href: "/wiki/graph", icon: Network,       label: t("nav.graph") },
-    { href: "/query",      icon: Activity,      label: t("nav.query") },
-    { href: "/lint",       icon: Wrench,        label: t("nav.lint") },
+    { href: "/",           icon: PenSquare,    label: t("nav.home") },
+    { href: "/wiki",       icon: BookOpen,     label: t("nav.wiki") },
+    { href: "/raw",        icon: Upload,       label: t("nav.import") },
+    { href: "/wiki/graph", icon: Network,      label: t("nav.graph") },
+    { href: "/tasks",      icon: CheckSquare,  label: t("nav.tasks") },
+    { href: "/lint",       icon: Wrench,       label: t("nav.lint") },
   ];
 
   useEffect(() => {
