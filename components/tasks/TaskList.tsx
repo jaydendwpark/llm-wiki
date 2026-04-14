@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, Circle, Calendar, Tag } from "lucide-react";
+import { CheckCircle, Circle, PlayCircle, Calendar, Tag } from "lucide-react";
 import { useLocale } from "@/lib/i18n/context";
 
 interface Task {
@@ -22,10 +22,18 @@ export function TaskList({ initialTasks }: Props) {
   const { t } = useLocale();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
 
-  const toggleDone = async (task: Task) => {
-    const nextStatus = task.status === "done" ? "todo" : "done";
+  const cycleStatus = async (task: Task) => {
+    // todo → in_progress → done
+    const next: Record<string, string> = {
+      todo: "in_progress",
+      in_progress: "done",
+      done: "todo",
+    };
+    const nextStatus = next[task.status] ?? "todo";
     setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, status: nextStatus } : t)),
+      prev.map((t) =>
+        t.id === task.id ? { ...t, status: nextStatus as Task["status"] } : t,
+      ),
     );
 
     try {
@@ -35,26 +43,29 @@ export function TaskList({ initialTasks }: Props) {
         body: JSON.stringify({ status: nextStatus }),
       });
     } catch {
-      // revert on error
       setTasks((prev) =>
         prev.map((t) => (t.id === task.id ? { ...t, status: task.status } : t)),
       );
     }
   };
 
-  const active = tasks.filter((t) => t.status !== "done" && t.status !== "cancelled");
+  const doing = tasks.filter((t) => t.status === "in_progress");
+  const todo = tasks.filter((t) => t.status === "todo");
   const done = tasks.filter((t) => t.status === "done");
+  const cancelled = tasks.filter((t) => t.status === "cancelled");
 
   const TaskRow = ({ task }: { task: Task }) => {
     const isDone = task.status === "done";
     return (
       <div className="flex items-start gap-3 bg-wiki-surface border border-wiki-border rounded-lg px-4 py-3 group">
         <button
-          onClick={() => toggleDone(task)}
+          onClick={() => cycleStatus(task)}
           className="mt-0.5 shrink-0 text-wiki-muted hover:text-wiki-accent transition-colors"
         >
-          {isDone ? (
+          {task.status === "done" ? (
             <CheckCircle className="w-4 h-4 text-wiki-ok" />
+          ) : task.status === "in_progress" ? (
+            <PlayCircle className="w-4 h-4 text-wiki-accent" />
           ) : (
             <Circle className="w-4 h-4" />
           )}
@@ -96,9 +107,17 @@ export function TaskList({ initialTasks }: Props) {
 
   return (
     <div className="space-y-6">
-      {active.length > 0 && (
+      {doing.length > 0 && (
         <div className="space-y-2">
-          {active.map((task) => <TaskRow key={task.id} task={task} />)}
+          <p className="text-xs text-wiki-accent uppercase tracking-wider px-1">{t("tasks.inProgress")}</p>
+          {doing.map((task) => <TaskRow key={task.id} task={task} />)}
+        </div>
+      )}
+
+      {todo.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs text-wiki-muted uppercase tracking-wider px-1">{t("tasks.todo")}</p>
+          {todo.map((task) => <TaskRow key={task.id} task={task} />)}
         </div>
       )}
 

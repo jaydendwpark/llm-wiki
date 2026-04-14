@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { CheckCircle, Clock, FileText, Upload } from "lucide-react";
+import { CheckCircle, AlertCircle, FileText, Upload } from "lucide-react";
+import { RetryButton } from "@/components/raw/RetryButton";
 import { getT } from "@/lib/i18n/server";
 import Link from "next/link";
 
@@ -48,10 +49,13 @@ export default async function UploadHistoryPage() {
                   {t("import.ingested")}
                 </span>
               ) : (
-                <span className="flex items-center gap-1.5 text-xs text-wiki-muted shrink-0">
-                  <Clock className="w-3 h-3" />
-                  {t("import.pending")}
+                <span className="flex items-center gap-1.5 text-xs text-wiki-err shrink-0">
+                  <AlertCircle className="w-3 h-3" />
+                  {t("import.failed")}
                 </span>
+              )}
+              {!s.ingested && (
+                <RetryButton sourceId={s.id} />
               )}
               <span className="text-xs text-wiki-muted shrink-0">
                 {new Date(s.created_at).toLocaleDateString()}

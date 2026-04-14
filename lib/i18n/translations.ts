@@ -23,6 +23,10 @@ const translations = {
     en: "Type a question, memo, URL, or task\u2026",
     ko: "질문, 메모, URL, 할 일을 입력하세요\u2026",
   },
+  "home.placeholderDrop": {
+    en: "Drag & drop any file here.",
+    ko: "어떤 자료든 드래그앤 드랍 하면 됩니다.",
+  },
   "home.queryBtn": { en: "Query", ko: "질문" },
   "home.registerBtn": { en: "Register", ko: "등록" },
   "home.dateOption": { en: "Date", ko: "날짜" },
@@ -117,7 +121,9 @@ const translations = {
   },
   "import.goHome": { en: "Go to Home", ko: "홈으로 이동" },
   "import.ingested": { en: "Ingested", ko: "처리됨" },
-  "import.pending": { en: "Pending", ko: "대기 중" },
+  "import.failed": { en: "Failed", ko: "실패" },
+  "import.retry": { en: "Retry", ko: "재시도" },
+  "import.retrying": { en: "Retrying\u2026", ko: "재시도 중\u2026" },
   "import.queued": { en: "Queued", ko: "대기 중" },
 
   // Lint

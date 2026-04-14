@@ -63,7 +63,9 @@ export function HomeInput() {
   const { theme } = useTheme();
 
   const [text, setText] = useState("");
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(
+    new Date().toISOString().slice(0, 10),
+  );
   const [taskMode, setTaskMode] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [output, setOutput] = useState<OutputState | null>(null);
@@ -649,7 +651,7 @@ export function HomeInput() {
             ref={textareaRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={t("home.placeholder")}
+            placeholder={`${t("home.placeholder")}\n${t("home.placeholderDrop")}`}
             rows={3}
             className="w-full bg-transparent rounded-xl px-4 py-3 text-sm text-wiki-text placeholder-wiki-muted focus:outline-none resize-none"
           />
